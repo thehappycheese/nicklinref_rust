@@ -1,0 +1,19 @@
+[package]
+name = "nicklinref"
+version = "0.1.0"
+authors = ["thehappycheese <the.nicholas.archer@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lazy_static="1.4.0"
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1.4.0", features=["macros","rt-multi-thread"]}
+warp = "0.2"
+config = "0.10"
+serde = {version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+nickslinetoolsrust = {path="../nickslinetoolsrust"}
+bson = "1.2.0"
+lz-fear = "0.1.1"

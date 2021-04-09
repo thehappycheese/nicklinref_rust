@@ -1,0 +1,8 @@
+
+{
+	"server":"0.0.0.0",
+	"port":"8080",
+	"data_dir":"./data__dir",
+	"data_url":"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
+	"num_threads":8
+}
