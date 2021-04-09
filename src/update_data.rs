@@ -8,11 +8,14 @@ use crate::esri_serde::{LayerDownloadChunk, LayerSaved, LayerSavedFeature};
 use std::sync::Arc;
 
 use bson;
+use serde_json;
 use lz_fear;
 use reqwest;
 
-use std::{time};
+use std::io::BufWriter;
 
+use std::{time};
+use crate::wait_for_n_seconds::{wait_for_n_seconds};
 
 pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
 	println!("update_data started");
@@ -21,7 +24,7 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 		println!("Tried to delete data folder and contents but {}", e)
 	}
 	fs::create_dir_all(&s.data_dir)?;
-	let file_out_bson = File::create(Path::new(&s.data_dir).join(Path::new("output.bson.lz4")))?;
+	let file_out_bson = File::create(Path::new(&s.data_dir).join(Path::new("output.json.lz4")))?;
 	let mut document_to_save = LayerSaved {
 		features: Vec::with_capacity(180246),
 	};
@@ -52,15 +55,24 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 			break;
 		}
 	}
+	// wait_for_n_seconds(20u64).await;
+	// println!("will convert to bson document");
+	// let res2 = bson::to_document(&document_to_save).unwrap();
+	
+	// wait_for_n_seconds(20u64).await;
+	// println!("will compress bson document and write to file");
+	// let compressor = lz_fear::framed::CompressionSettings::default();
+	
+	// let mut binary_bson = vec![];
+	//res2.to_writer(&mut binary_bson)?;
+	// compressor.compress(&binary_bson[..], &file_out_bson)?;
+	//compressor.compress(res2, &file_out_bson)?;
 
-	let res2 = bson::to_document(&document_to_save).unwrap();
-
+	wait_for_n_seconds(20u64).await;
+	println!("will convert to json document");
+	let res = serde_json::to_vec(&document_to_save)?;
 	let compressor = lz_fear::framed::CompressionSettings::default();
-
-	let mut binary_bson = vec![];
-	res2.to_writer(&mut binary_bson)?;
-
-	compressor.compress(&binary_bson[..], &file_out_bson)?;
+	compressor.compress(&res[..], &file_out_bson)?;
 
 	Ok(document_to_save)
 }
@@ -68,11 +80,18 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 pub async fn load_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
 	let instant_start_load_data = time::Instant::now();
 	println!("0.00ms - load_data started");
-	let file_in_bson = File::open(Path::new(&s.data_dir).join(Path::new("output.bson.lz4")))?;
-	println!("{:?}  - trying to decompress data",time::Instant::now().duration_since(instant_start_load_data));
-	let decomp = lz_fear::framed::decompress_frame(file_in_bson)?;
-	println!("{:?}  - trying to create document from data", time::Instant::now().duration_since(instant_start_load_data));
-	let result:LayerSaved = bson::from_document(bson::Document::from_reader(&mut &decomp[..])?)?;
+	//let file_in_bson = File::open(Path::new(&s.data_dir).join(Path::new("output.bson.lz4")))?;
+	let file_in_json = File::open(Path::new(&s.data_dir).join(Path::new("output.json.lz4")))?;
+	println!("{:?}  - start decompress data",time::Instant::now().duration_since(instant_start_load_data));
+	//let decomp = lz_fear::framed::decompress_frame(file_in_bson)?;
+	let decomp = lz_fear::framed::decompress_frame(file_in_json)?;
+	println!("{:?}  - end decompress data",time::Instant::now().duration_since(instant_start_load_data));
+	wait_for_n_seconds(20u64).await;
+	println!("{:?}  - start create document from decompressed data", time::Instant::now().duration_since(instant_start_load_data));
+	//let result:LayerSaved = bson::from_document(bson::Document::from_reader(&mut &decomp[..])?)?;
+	let result:LayerSaved = serde_json::from_reader(&mut &decomp[..])?;
+	println!("{:?}  - end create document from decompressed data", time::Instant::now().duration_since(instant_start_load_data));
+	wait_for_n_seconds(20u64).await;
 	println!("{:?}  - load_data ended", time::Instant::now().duration_since(instant_start_load_data));
 	Ok(result)
 }
