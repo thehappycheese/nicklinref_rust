@@ -66,7 +66,7 @@ pub async fn load_data<'a>(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std:
 }
 
 
-type LookupMap<'a> = HashMap<char, HashMap<String, HashMap<Cwy, & 'a [LayerSavedFeature]>>>;
+type LookupMap<'a> = HashMap<char, HashMap<String, & 'a [LayerSavedFeature]>>;
 
 pub fn perform_analysis<'b>(
 	layer: & 'b LayerSaved,
@@ -93,17 +93,16 @@ pub fn perform_analysis<'b>(
 				None => ' ',
 			};
 
-			let map_from_road_to_cwy = result.entry(first_letter).or_default();
+			let map_from_road_slice = result.entry(first_letter).or_default();
 
-			let map_from_cwy_to_slice = map_from_road_to_cwy
-				.entry(previous_road.clone())
-				.or_default();
-			
 			// the i'th item does not have the same ROAD and CWY as the (i-1)'th  item.
 			// let current_slice_end = i; // exclusive
-			map_from_cwy_to_slice
-				.entry(feature.attributes.CWY.clone())
+			map_from_road_slice
+				.entry(previous_road.clone())
 				.or_insert(&layer.features[current_slice_start..i]);
+			
+			
+			
 			//println!("slice from feature [{}..{}] for road {} and {:?}",current_slice_start,i,previous_road,previous_cwy);
 
 			current_slice_start = i; // inclusive

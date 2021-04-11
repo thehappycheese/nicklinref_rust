@@ -3,7 +3,7 @@ use nickslinetoolsrust::vector2::Vector2;
 use serde::{Deserialize, Serialize};
 
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub enum Cwy {
 	Left,
 	Right,
