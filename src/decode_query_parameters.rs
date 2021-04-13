@@ -46,7 +46,7 @@ impl<'de> Deserialize<'de> for RequestedCwy {
 				Ok(match &chars.into_iter().collect::<String>()[..]{
 					"L"=>RequestedCwy::L,
 					"R"=>RequestedCwy::R,
-					"S"=>RequestedCwy::R,
+					"S"=>RequestedCwy::S,
 					"LR"=>RequestedCwy::LR,
 					"LS"=>RequestedCwy::LS,
 					"RS"=>RequestedCwy::RS,
