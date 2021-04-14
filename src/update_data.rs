@@ -1,8 +1,11 @@
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::fs;
 use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
+use std::ops::Index;
+
 
 use lz_fear;
 use reqwest;
@@ -10,7 +13,7 @@ use serde_json;
 
 use crate::basic_error::BasicError;
 use crate::config_loader::Settings;
-use crate::esri_serde::{LayerDownloadChunk, LayerSaved, LayerSavedFeature};
+use crate::esri_serde::{LayerDownloadChunk, LayerSaved, LayerSavedFeature, Cwy};
 
 
 pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
@@ -76,55 +79,103 @@ pub async fn load_data<'a>(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std:
 }
 
 
-pub type LookupMap = HashMap<char, HashMap<String, (usize, usize)>>;
+
+
+#[allow(non_snake_case)]
+pub struct RoadDataByCwy{
+	pub Left:Option<(usize, usize)>,
+	pub Right:Option<(usize, usize)>,
+	pub Single:Option<(usize, usize)>,
+}
+impl RoadDataByCwy{
+	fn new(l:Option<(usize,usize)>, r:Option<(usize,usize)>, s:Option<(usize,usize)>)->Self{
+		Self{Left:l,Right:r,Single:s}
+	}
+	fn new_from_cwy(cwy:&Cwy, range:(usize, usize))->Self{
+		match cwy{
+			Cwy::Left=>Self::new(Some(range), None, None),
+			Cwy::Right=>Self::new(None, Some(range), None),
+			Cwy::Single=>Self::new(None, None, Some(range)),
+		}
+	}
+	fn with_updated_cwy(&self,cwy:&Cwy, range:(usize, usize))->Self{
+		match cwy{
+			Cwy::Left=>Self::new(Some(range), self.Right, self.Single),
+			Cwy::Right=>Self::new(self.Left, Some(range), self.Single),
+			Cwy::Single=>Self::new(self.Left, self.Right, Some(range)),
+		}
+	}
+}
+impl Index<&Cwy> for RoadDataByCwy{
+	type Output = Option<(usize, usize)>;
+	fn index(&self, index:&Cwy)->&Self::Output{
+		match index{
+			Cwy::Left=>&self.Left,
+			Cwy::Right=>&self.Right,
+			Cwy::Single=>&self.Single,
+		}
+	}
+}
+
+
+pub type LookupMap = HashMap<char, HashMap<String, RoadDataByCwy>>;
 
 pub fn perform_analysis(
 	layer: Arc<LayerSaved>,
 ) -> Result<LookupMap, Box<dyn std::error::Error>> {
 	
 	println!("Analysing data");
-	let mut result:LookupMap = HashMap::new(); // map_from_first_letter_to_roads
+	let mut map_from_first_letter:LookupMap = HashMap::new(); // map_from_first_letter_to_roads
 
 	
-	let (mut previous_road, mut previous_cwy) = match layer.features.iter().next(){
-		Some(first_feature)=>(&first_feature.attributes.ROAD, &first_feature.attributes.CWY),
-		None=>{return Err(Box::new(BasicError::new("No features were recieved")))}
+	let (
+		mut previous_road,
+		mut previous_cwy,
+		mut first_letter,
+	) = match layer.features.iter().next(){
+		Some(first_feature)=>(
+			&first_feature.attributes.ROAD,
+			&first_feature.attributes.CWY,
+			match layer.features[0].attributes.ROAD.chars().next() {
+				Some(fl) => fl,
+				None => ' ',
+			}
+		),
+		None=>{return Err(Box::new(BasicError::new("Zero features recieved by perform_analysis()")))}
 	};
 
 	let mut current_slice_start = 0; // inclusive of that index
 	
+	let mut map_from_road_number = map_from_first_letter.entry(first_letter).or_default();
 	let mut i: usize = 1;
-	
-	let mut first_letter = match layer.features[0].attributes.ROAD.chars().next() {
-		Some(fl) => fl,
-		None => ' ',
-	};
-	let mut map_from_road_slice = result.entry(first_letter).or_default();
 	while i < layer.features.len() {
 		let feature = &layer.features[i];
 
+
+		if previous_cwy != &feature.attributes.CWY{
+			// the into() function on the next line is doing magic that i dont quite understand. Maybe its better than my previous solution which was .clone() ?
+			match map_from_road_number.entry(previous_road.into()){ 
+				Entry::Vacant(e)=>{
+					e.insert(RoadDataByCwy::new_from_cwy(previous_cwy, (current_slice_start, i)));
+				}
+				Entry::Occupied(mut e)=>{
+					e.insert(e.get().with_updated_cwy(previous_cwy, (current_slice_start, i)));
+				}
+			}
+			current_slice_start = i;
+		}
+
 		if previous_road != &feature.attributes.ROAD {
-			
-			
 			let new_first_letter = match feature.attributes.ROAD.chars().next() {
 				Some(fl) => fl,
 				None => ' ',
 			};
 			if new_first_letter != first_letter{
 				first_letter = new_first_letter;
-				map_from_road_slice = result.entry(first_letter).or_default();
+				map_from_road_number = map_from_first_letter.entry(first_letter).or_default();
 			}
-
-			// the i'th item does not have the same ROAD and CWY as the (i-1)'th  item.
-			// let current_slice_end = i; // exclusive
-			map_from_road_slice
-				.entry(previous_road.clone())
-				.or_insert((current_slice_start, i));
-			
-			//println!("slice from feature [{}..{}] for road {}",current_slice_start,i,previous_road);
-
-			current_slice_start = i; // inclusive
 		}
+		
 		
 		previous_road = &feature.attributes.ROAD;
 		previous_cwy = &feature.attributes.CWY;
@@ -137,5 +188,5 @@ pub fn perform_analysis(
 	// 	println!("Key: '{}' has {} sub-keys", key, result[key].keys().len());
 	// }
 
-	Ok(result)
+	Ok(map_from_first_letter)
 }
