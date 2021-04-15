@@ -131,14 +131,14 @@ pub struct QueryParameters {
 	pub slk_to: f32,
 
 	#[serde(default = "default_offset")]
-	pub offset: f32,
+	pub offset:f64,
 
 	#[serde(default = "default_output_format")]
 	pub format: OutputFormat,
 }
 
-fn default_offset() -> f32 {
-	0f32
+fn default_offset() -> f64 {
+	0.0f64
 }
 
 fn default_cwy() -> RequestedCwy {

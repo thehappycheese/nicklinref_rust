@@ -182,11 +182,25 @@ pub fn perform_analysis(
 		i += 1;
 	}
 
-	// println!(">>>Analysis Completed");
-	// println!("Result top level has {} keys", result.keys().len());
-	// for key in result.keys(){
-	// 	println!("Key: '{}' has {} sub-keys", key, result[key].keys().len());
-	// }
+	println!(">>>Analysis Completed");
+	println!("Result top level has {} keys", map_from_first_letter.keys().len());
+	for key in map_from_first_letter.keys(){
+		println!("Key: '{}' has {} sub-keys", key, map_from_first_letter[key].keys().len());
+	}
+	for key in map_from_first_letter[&'H'].keys(){
+		let item = &map_from_first_letter[&'H'][key];
+		println!("Key exists on 'H': \"{}\" haveing the following number of features in L:{} R:{} S:{}", key, 
+		match item.Left {
+			Some(v)=>v.1-v.0,
+			None=>0
+		},match item.Right {
+			Some(v)=>v.1-v.0,
+			None=>0
+		},match item.Single {
+			Some(v)=>v.1-v.0,
+			None=>0
+		});
+	}
 
 	Ok(map_from_first_letter)
 }
