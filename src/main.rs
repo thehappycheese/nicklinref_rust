@@ -15,7 +15,7 @@ use config_loader::Settings;
 use update_data::{update_data, load_data, perform_analysis, LookupMap, RoadDataByCwy};
 use decode_query_parameters::{QueryParameters};
 use esri_serde::{LayerSaved, LayerSavedFeature, Cwy};
-
+use std::net::{IpAddr, SocketAddr};
 
 fn clone_arc<T>(something:T) -> impl warp::Filter<Extract=(T,), Error=Infallible> + Clone
 where T:Send+Sync+Clone{
@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let data_map:Arc<LookupMap> =  perform_analysis(data.clone())?.into();
 
-	let route1 = warp::any()
+	let route_query = warp::path("query")
 		.and(warp::path::full())
 		.and(warp::query())
 		.and(clone_arc(data.clone()))
@@ -83,7 +83,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 					if item.attributes.END_SLK>query.slk_from && item.attributes.START_SLK<query.slk_to{
 
 						let lsm:LineStringMeasured = LineStringMeasured::from_vec(&item.geometry);
-						let len_requested = query.slk_to-query.slk_from;
 						let item_len_km = item.attributes.END_SLK - item.attributes.START_SLK;
 						let frac_start = (query.slk_from-item.attributes.START_SLK)/item_len_km;
 						let frac_end = (query.slk_to-item.attributes.START_SLK)/item_len_km;
@@ -107,9 +106,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			Ok(format!("{:?} >> {:?} >> num features in road: {}\n\n{:?}", full_path, query, features.len(), features))
 
 		});
-	let address = ([0,0,0,0],8080);
+	
+
+
+	let route_static = warp::path("show").and(warp::fs::dir(s.static_dir.clone()));
+	let address:SocketAddr = SocketAddr::new(IpAddr::V4(s.server), s.port);
 	println!("about to serve at  {:?}", address);
-	warp::serve(route1).run(address).await;
+	warp::serve(route_static.or(route_query)).run(address).await;
 	
 	Ok(())
 }

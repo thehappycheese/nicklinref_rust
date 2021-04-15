@@ -1,3 +1,4 @@
 target/
 DEL_ME/
-data__dir/
+__data_dir/
+secrets.json

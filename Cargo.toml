@@ -14,5 +14,5 @@ warp = "0.3"
 config = "0.10"
 serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-nickslinetoolsrust = {path="../nickslinetoolsrust"}
+nickslinetoolsrust = {git="https://github.com/thehappycheese/nicks_line_tools_rust.git", branch="main"}
 lz-fear = "0.1.1"

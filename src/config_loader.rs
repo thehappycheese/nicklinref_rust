@@ -1,12 +1,14 @@
 use config::{Config, ConfigError, File};
+use std::net::{Ipv4Addr};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-	pub server:String,
-	pub port:String,
+	pub server:Ipv4Addr,
+	pub port:u16,
 	pub data_dir:String,
 	pub data_url:String,
+	pub static_dir:String,
 	pub num_threads:usize
 }
 
