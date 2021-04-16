@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			// 	cwy:Cwy
 			// }
 
-			let features:Vec<LineString> = query.cwy
+			let features = query.cwy
 				.into_iter()
 				.filter_map(|cwy|{
 					if let Some(indexes) = road_data[&cwy]{
@@ -105,14 +105,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 					}else{
 						None
 					}
+				}).map(|linestring|{
+					"[".to_string() + &linestring.points.iter().filter_map(|vertex| serde_json::to_string(vertex).ok()).collect::<Vec<String>>().join(",") + "]"
 				})
 				// .recover(|error:BasicErrorWarp| async move {
 				// 	Ok(warp::reply::with_status(error.msg, StatusCode::BAD_REQUEST))
 				// })
-				.collect();
+				.collect::<Vec<String>>()
+				.join(",");
+			
 
-
-			Ok(format!("{:?} >> {:?} >> num features in road: {}\n\n{:?}", full_path, query, features.len(), features))
+			Ok("[".to_string() + &features + "]")
 
 		});
 	
