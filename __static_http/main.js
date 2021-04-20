@@ -13,8 +13,9 @@ if(localStorage.view){
 	}catch(e){}
 }
 
-let featureProjection = view.getProjection()
-let dataProjection = new ol.format.GeoJSON().readProjection({"crs":{"type":"EPSG","properties":{"code":4326}}})
+let featureProjection = view.getProjection();
+
+let dataProjection = new ol.format.GeoJSON().readProjection({"crs":{"type":"EPSG","properties":{"code":4326}}});
 
 let layer_osm = new ol.layer.Tile({
 	source: new ol.source.OSM()
@@ -30,9 +31,9 @@ let layer_geojson = new ol.layer.Vector({
 				width: 7,
 			}),
 			image: new ol.style.Circle({
-					radius: 8,
-					stroke: new ol.style.Stroke({color: 'white', width:7}),
-				}),
+				radius: 8,
+				stroke: new ol.style.Stroke({color: 'white', width:7}),
+			}),
 		}),
 		new ol.style.Style({
 			stroke: new ol.style.Stroke({
@@ -41,9 +42,9 @@ let layer_geojson = new ol.layer.Vector({
 				width: 3,
 			}),
 			image: new ol.style.Circle({
-					radius: 8,
-					stroke: new ol.style.Stroke({color: 'red', width:3}),
-				}),
+				radius: 8,
+				stroke: new ol.style.Stroke({color: 'red', width:3}),
+			}),
 		})
 	]
 });
@@ -69,7 +70,7 @@ fetch("secrets.json")
 	})
 	.then(resp=>resp.json())
 	.catch(err=>{
-		throw new Error("Cannot continue, initial response to request for secrets not ok. Catch.", err)
+		throw new Error(`Cannot continue, secrets cannot be decoded:  ${err}`)
 	})
 	.then(secrets=>{
 
