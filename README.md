@@ -10,6 +10,15 @@ This version aims to be orders of magnitude faster.
 > Note:
 > Only a single query per request is currently working.
 > In the python version you could request two chunks of road like this `?road=H001,H002&slk_from=0,2&slk_to=1,3`
+> - this is not working in the current version
+
+> Note:
+> the current response from the server is neither GeoJSON nor WKT.
+> To make it valid geojson all you need is to wrap the response like this:
+> 
+> `{“type”:”Feature”, “geometry”:{“type”:”MultiLineString”, “coordinates”:` 👉 insert response here 👈 `}}`
+
+
 
 
 ## Purpose
