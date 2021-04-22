@@ -100,7 +100,7 @@ add_features(new URLSearchParams(window.location.search)).then(success => succes
 
 async function add_features(url_params, fetch_pool=undefined) {
 
-	url_params.delete("format");
+	url_params.delete("f");
 	let url_to_fetch = "/query/?" + url_params.toString();
 	
 	let fetching;
@@ -142,16 +142,16 @@ async function add_features(url_params, fetch_pool=undefined) {
 			}
 			
 			//console.log(mls)
-			let GEOJSON = {
-				type:"Feature",
-				geometry:{
-					type:"MultiLineString",
-					coordinates:mls
-				}		
-			};
+			// let GEOJSON = {
+			// 	type:"Feature",
+			// 	geometry:{
+			// 		type:"MultiLineString",
+			// 		coordinates:mls
+			// 	}		
+			// };
 			//let GEOJSON = JSON.parse(text_geojson);
 			
-			let read_features = new ol.format.GeoJSON({featureProjection, dataProjection}).readFeatures(GEOJSON);
+			let read_features = new ol.format.GeoJSON({featureProjection, dataProjection}).readFeatures(mls);
 			layer_geojson.getSource().addFeatures(read_features);
 
 			

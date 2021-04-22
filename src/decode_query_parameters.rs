@@ -8,6 +8,7 @@ use std::iter::IntoIterator;
 pub enum OutputFormat {
 	GEOJSON,
 	WKT,
+	JSON,
 }
 
 impl<'de> Deserialize<'de> for OutputFormat {
@@ -30,6 +31,7 @@ impl<'de> Deserialize<'de> for OutputFormat {
 				Ok(match chars.as_str() {
 					"GEOJSON" => OutputFormat::GEOJSON,
 					"WKT" => OutputFormat::WKT,
+					"JSON" => OutputFormat::JSON,
 					_ => OutputFormat::GEOJSON,
 				})
 			}
@@ -134,7 +136,7 @@ pub struct QueryParameters {
 	pub offset:f64,
 
 	#[serde(default = "default_output_format")]
-	pub format: OutputFormat,
+	pub f: OutputFormat,
 }
 
 fn default_offset() -> f64 {

@@ -7,17 +7,15 @@ mod unit_conversion;
 
 use std::sync::Arc;
 use std::convert::Infallible;
-use warp::http::StatusCode;
 
 use warp::Filter;
-use nickslinetoolsrust::vector2::Vector2;
-use nickslinetoolsrust::linestring::{LineString, LineStringy, LineStringMeasured};
+use nickslinetoolsrust::linestring::{LineStringy, LineStringMeasured};
 use unit_conversion::convert_metres_to_degrees;
 
 use config_loader::Settings;
 use update_data::{update_data, load_data, perform_analysis, LookupMap, RoadDataByCwy};
-use decode_query_parameters::{QueryParameters};
-use esri_serde::{LayerSaved, LayerSavedFeature, Cwy};
+use decode_query_parameters::{QueryParameters, OutputFormat};
+use esri_serde::{LayerSaved};
 use std::net::{IpAddr, SocketAddr};
 use basic_error::BasicErrorWarp;
 
@@ -46,11 +44,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let data_map:Arc<LookupMap> =  perform_analysis(data.clone())?.into();
 
 	let route_query = warp::path("query")
-		.and(warp::path::full())
 		.and(warp::query())
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_map.clone()))
-		.and_then(|full_path:warp::path::FullPath, query:QueryParameters, data:Arc<LayerSaved>, data_map:Arc<LookupMap>| async move{
+		.and_then(|query:QueryParameters, data:Arc<LayerSaved>, data_map:Arc<LookupMap>| async move{
 
 			let road_data:&RoadDataByCwy = match match query.road.chars().next(){
 				Some(first_letter)=>{
@@ -105,17 +102,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 					}else{
 						None
 					}
-				}).map(|linestring|{
-					"[".to_string() + &linestring.points.iter().filter_map(|vertex| serde_json::to_string(vertex).ok()).collect::<Vec<String>>().join(",") + "]"
-				})
-				// .recover(|error:BasicErrorWarp| async move {
-				// 	Ok(warp::reply::with_status(error.msg, StatusCode::BAD_REQUEST))
-				// })
-				.collect::<Vec<String>>()
-				.join(",");
-			
+				});
+				
+			match query.f{
+			    OutputFormat::JSON => {
+					let line_string_string = features
+						.map(|linestring|{
+								"[".to_string() + &linestring.points.iter().filter_map(|vertex| serde_json::to_string(vertex).ok()).collect::<Vec<String>>().join(",") + "]"
+						})
+						.collect::<Vec<String>>()
+						.join(",");
+				
 
-			Ok("[".to_string() + &features + "]")
+					Ok("[".to_string() + &line_string_string + "]")
+				},
+				OutputFormat::GEOJSON => {
+					let line_string_string = features
+						.map(|linestring|{
+								"[".to_string() + &linestring.points.iter().filter_map(|vertex| serde_json::to_string(vertex).ok()).collect::<Vec<String>>().join(",") + "]"
+						})
+						.collect::<Vec<String>>()
+						.join(",");
+				
+
+					Ok( r#"{"type":"Feature", "geometry":{"type":"MultiLineString", "coordinates":["#.to_string() + &line_string_string + "]}}")
+				},
+				OutputFormat::WKT => {
+					let line_string_string = features
+						.map(|linestring|{
+								"(".to_string() + &linestring.points.iter().map(|vertex| format!("{} {}", vertex.x, vertex.y)).collect::<Vec<String>>().join(",") + ")"
+						})
+						.collect::<Vec<String>>()
+						.join(",");
+				
+
+					Ok("MULTILINESTRING (".to_string() + &line_string_string + ")")
+				}
+			}
 
 		});
 	
