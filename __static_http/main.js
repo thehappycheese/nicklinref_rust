@@ -203,20 +203,32 @@ function set_background(val){
 }
 
 
+let demo_tour = [
+	{road:"H001", slk_from:0, slk_to:50, step:0.1}, // 500 features
+	{road:"H005", slk_from:0, slk_to:500, step:1}, // 500 features
+	{road:"H016", slk_from:0, slk_to:20, step:0.01}, // 2000 features
+	{road:"H015", slk_from:0, slk_to:20, step:0.01}, // 2000 features
+	{road:"H023", slk_from:0, slk_to:15, step:0.01}, // 1500 features
+]
+
+
 function run_demo(){
-	let fetch_pool = new Fetch_Queue();
+	let fetch_pool = new Fetch_Queue(200);
 	
 	layer_geojson.getSource().clear();
 
-	for(let i = 0; i < 50; i += 0.01){
-		add_features(
-			new URLSearchParams({
-				road:		"H001",
-				slk_from:	i,
-				slk_to:		i+0.01
-			}),
-			fetch_pool
-		);
+	for(item of demo_tour){
+		for(let i = item.slk_from; i < item.slk_to; i += item.step){
+			add_features(
+				new URLSearchParams({
+					road:		item.road,
+					slk_from:	i,
+					slk_to:		i+item.step
+				}),
+				fetch_pool
+			);
+		}
 	}
-	fetch_pool.all().then(arr=>zoom_to_loaded_features())
+
+	fetch_pool.then(arr=>zoom_to_loaded_features());
 }

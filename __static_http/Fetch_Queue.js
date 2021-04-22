@@ -2,52 +2,67 @@
 
 class Fetch_Queue {
 
+	concurrency_limit = 30;
+	number_of_running_tasks = 0;
 	queue = [];
+	completion_awaiters = [];
 
-	constructor(size) {
-		if (size <= 0) {
-			throw new Error("Fetch_Pool(size) size must be positive number");
+	constructor(concurrency_limit = 30) {
+		if (concurrency_limit <= 0) {
+			throw new Error(`Fetch_Pool(concurrency_limit=${concurrency_limit}) concurrency_limit must be positive number`);
 		}
-		this.size = size;
+		this.concurrency_limit = concurrency_limit;
 	}
 
-	async resolve_handler(resolved_promise, fetch_result) {
-		this.unresolved.delete(resolved_promise);
-		return fetch_result;
-	}
-
-	async fetch(url) {
-		let resolver;
+	fetch(url, options={}) {
+		let record;
 		let np = new Promise((resolve, reject) => {
-			resolver = resolve;
+			record = {url, options, resolve, reject}
+			this.queue.push(record);
 		});
-		this.queue.push([url, resolver]);
+		this.fill_pool();
 		return np;
 	}
 
-	*chunk(iter, n) {
-		let batch = [];
-		for (let item of iter) {
-			batch.push(item);
-			if (batch.length > n) {
-				yield batch
-				batch = [];
+	fill_pool(){
+		// try to empty queue until
+		if(this.queue.length<=0){
+			if(this.number_of_running_tasks==0){
+				this.finish();
+			}
+		}else{
+			while(this.number_of_running_tasks<this.concurrency_limit && this.queue.length>0){
+				this.number_of_running_tasks++;
+				let new_task = this.queue.pop();
+
+				fetch(new_task.url, new_task.options)
+					.then(
+						(response)=>{
+							this.number_of_running_tasks--;
+							this.fill_pool();
+							new_task.resolve(response);
+						},
+						(rejection)=>{
+							this.number_of_running_tasks--;
+							this.fill_pool();
+							new_task.reject(rejection);
+						}
+					);
 			}
 		}
-		if (batch) yield batch;
 	}
 
-	async all() {
-		for (let batch of this.chunk(this.queue, 30)) {
-			let promises = [];
-			for (let [url, resolver] of batch) {
-				promises.push(
-					fetch(url).then(result => resolver(result))
-				);
-			}
-			await Promise.all(promises);
+	finish(){
+		for(let awaiter of this.completion_awaiters){
+			awaiter();
 		}
-		this.queue = [];
+		this.completion_awaiters = [];
+	}
+
+	then(func) {
+		return new Promise((resolve, reject)=>{
+			this.completion_awaiters.push(resolve)
+		}).then(()=>func())
 	}
 
 }
