@@ -232,3 +232,48 @@ function run_demo(){
 
 	fetch_pool.then(arr=>zoom_to_loaded_features());
 }
+
+function fetch_batch(){
+	let te = new TextEncoder();
+	let requests = [];
+	
+
+	// one request per road
+	for(item of demo_tour){
+		
+		let total_bytes_length = 0;
+		let batched_requests = []
+		let road_bytes = te.encode(item.road);
+		let current_length = 1 + road_bytes.length + 4 + 4 + 4 + 1;
+		
+
+		for(let i = item.slk_from; i < item.slk_to; i += item.step){
+			total_bytes_length += current_length;
+			let current_byte_array = new Uint8Array(current_length);
+			current_byte_array[0] = road_bytes.length;
+			current_byte_array.set(road_bytes, 1);
+			current_byte_array.set(Float32Array.from([i, i+item.step, 0]), 1+road_bytes.length)
+			batched_requests.push(current_byte_array);
+			
+		}
+
+		let result = new Uint8Array(total_bytes_length);
+		let offset = 0;
+		batched_requests.forEach(byte_array=>{
+			result.set(byte_array, offset);
+			offset+=byte_array.length;
+		})
+		requests.push(result)
+		
+	}
+	requests.forEach(request=>{
+		fetch("/batch/",{
+			method:"POST",
+			body:request
+		})
+		.then(response=>response.text())
+		.then(response=>{
+			console.log(response);
+		})
+	});
+}

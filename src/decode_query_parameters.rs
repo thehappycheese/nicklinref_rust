@@ -1,7 +1,10 @@
 use crate::esri_serde::Cwy;
 use serde;
 use serde::de::{Deserialize, Deserializer, Visitor};
+
+use std::str::{from_utf8};
 use std::fmt;
+use std::convert::TryFrom;
 use std::iter::IntoIterator;
 
 #[derive(Debug)]
@@ -149,4 +152,36 @@ fn default_cwy() -> RequestedCwy {
 
 fn default_output_format() -> OutputFormat {
 	OutputFormat::GEOJSON
+}
+
+struct QueryParameterBatch(Vec<QueryParameters>);
+
+#[derive(Debug)]
+struct BatchQueryParametersDecodeError;
+impl std::error::Error for BatchQueryParametersDecodeError{}
+impl std::fmt::Display for BatchQueryParametersDecodeError{
+	fn fmt(&self, f:&mut fmt::Formatter) -> std::fmt::Result{
+		write!(f, "{:?}", self)
+	}
+}
+
+impl TryFrom<bytes::Bytes> for QueryParameterBatch{
+	type Error = Box<dyn std::error::Error>;
+	fn try_from(body:bytes::Bytes) -> Result<QueryParameterBatch, Self::Error> {
+		let params:Vec<QueryParameters> = vec![];
+
+		let mut offset:usize = 0;
+		while offset < body.len(){
+			
+			let road_name_length:usize = *body.get(offset).ok_or(BatchQueryParametersDecodeError)? as usize;
+
+			let current_query_length = 1+road_name_length+4+4+4+1;
+			offset += 1;
+			let road_name_bytes = body.get(offset..offset + road_name_length).ok_or(BatchQueryParametersDecodeError)?;
+			offset += road_name_length;
+			let road_name = from_utf8(road_name_bytes).ok_or(BatchQueryParametersDecodeError)?;
+			let road_name = body.get(offset..offset+road_name_length).ok_or(BatchQueryParametersDecodeError)?;
+		}
+		QueryParameterBatch(params)
+	}
 }

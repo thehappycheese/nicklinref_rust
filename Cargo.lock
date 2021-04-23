@@ -623,6 +623,7 @@ dependencies = [
 name = "nicklinref"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "config",
  "lz-fear",
  "nickslinetoolsrust",

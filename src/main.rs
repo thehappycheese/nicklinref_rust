@@ -5,19 +5,25 @@ mod basic_error;
 mod decode_query_parameters;
 mod unit_conversion;
 
+use std::str;
 use std::sync::Arc;
 use std::convert::Infallible;
 
 use warp::Filter;
+use warp::http::{StatusCode};
+use bytes;
+use config_loader::Settings;
+
 use nickslinetoolsrust::linestring::{LineStringy, LineStringMeasured};
 use unit_conversion::convert_metres_to_degrees;
-
-use config_loader::Settings;
 use update_data::{update_data, load_data, perform_analysis, LookupMap, RoadDataByCwy};
-use decode_query_parameters::{QueryParameters, OutputFormat};
+use decode_query_parameters::{QueryParameters, OutputFormat, QueryParameterBatch};
 use esri_serde::{LayerSaved};
 use std::net::{IpAddr, SocketAddr};
 use basic_error::BasicErrorWarp;
+
+
+
 
 fn clone_arc<T>(something:T) -> impl warp::Filter<Extract=(T,), Error=Infallible> + Clone
 where T:Send+Sync+Clone{
@@ -61,14 +67,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 				Some(data_lookup_subtable)=>data_lookup_subtable,
 				None=>{return Err(warp::reject::custom(BasicErrorWarp::new("full road name not found. lookup failed")))}
 			};
-			
-			// #[derive(Debug)]
-			// struct ls_dbg{
-			// 	slk_from:f32,
-			// 	slk_to:f32,
-			// 	ls:LineString,
-			// 	cwy:Cwy
-			// }
 
 			let features = query.cwy
 				.into_iter()
@@ -112,8 +110,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 						})
 						.collect::<Vec<String>>()
 						.join(",");
-				
-
 					Ok("[".to_string() + &line_string_string + "]")
 				},
 				OutputFormat::GEOJSON => {
@@ -123,8 +119,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 						})
 						.collect::<Vec<String>>()
 						.join(",");
-				
-
 					Ok( r#"{"type":"Feature", "geometry":{"type":"MultiLineString", "coordinates":["#.to_string() + &line_string_string + "]}}")
 				},
 				OutputFormat::WKT => {
@@ -134,20 +128,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 						})
 						.collect::<Vec<String>>()
 						.join(",");
-				
-
 					Ok("MULTILINESTRING (".to_string() + &line_string_string + ")")
 				}
 			}
 
 		});
 	
+	
+	let route_batch = warp::post()
+		.and(warp::path("batch"))
+		.and(warp::body::bytes())
+		.and(clone_arc(data.clone()))
+		.and(clone_arc(data_map.clone()))
+		.and_then(|body:bytes::Bytes, _data:Arc<LayerSaved>, _data_map:Arc<LookupMap>| async move{
+			let m:QueryParameterBatch = body.into();
+			Ok(format!("{}", b))
+		});
+		// }).recover(|error:warp::reject::Rejection|{
+		// 	// TODO: blames the user for all errors:
+			
+		// 	if false{
+		// 	 	Err(error) // this nonsense makes the type checker happy?
+		// 	 }else{
+		// 		Ok(warp::reply::with_status(warp::reply(), StatusCode::BAD_REQUEST))	
+		// 	}
+		// });
+
 
 
 	let route_static = warp::path("show").and(warp::fs::dir(s.static_dir.clone()));
 	let address:SocketAddr = SocketAddr::new(IpAddr::V4(s.server), s.port);
 	println!("about to serve at  {:?}", address);
-	warp::serve(route_static.or(route_query)).run(address).await;
+	warp::serve(
+		route_static
+		.or(route_query)
+		.or(route_batch)
+	).run(address).await;
 	
 	Ok(())
 }
