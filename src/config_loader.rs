@@ -8,8 +8,7 @@ pub struct Settings {
 	pub port:u16,
 	pub data_dir:String,
 	pub data_url:String,
-	pub static_dir:String,
-	pub num_threads:usize
+	pub static_dir:String
 }
 
 impl Settings {

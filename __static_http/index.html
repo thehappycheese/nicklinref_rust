@@ -36,8 +36,19 @@
 		<label><input name="underlay" type="radio" onchange="radio_update(event);" value="openstreetmap" checked/> Use Open Street Map</label>
 		<label><input name="underlay" type="radio" onchange="radio_update(event);" value="metromap" /> Use 'metromap' imagery</label>
 		<label><input name="underlay" type="radio" onchange="radio_update(event);" value="skyview" /> Use 'skyview' imagery</label>
-		<button onclick="alert('The following button loads about 6500 features from the server and adds them to the map one by one. Its a pretty unrealistic stress test.. Batch loading would be needed in practice.')">?</button>
-		<button onclick="run_demo()">Run speed test (6500 requests, up to 200 concurrent)</button>
+		<button onclick="reset_view()">Reset View</button><br>
+		<button
+			onclick="run_demo()" 
+			title="Loads 6500 features from the server one by one, allowing up to 200 parallel network requests."
+		>
+			Run speed test (6500 individual requests, up to 200 concurrent)
+		</button>
+		<button
+			onclick="fetch_batch()" 
+			title="Loads 6500 features from the server one by one, allowing up to 200 parallel network requests."
+		>
+			Run speed test (6500 features, in batches of about 1500)
+		</button>
 	</div>
 </body>
 

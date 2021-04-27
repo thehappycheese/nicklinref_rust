@@ -32,6 +32,11 @@ impl BasicErrorWarp{
 
 impl Error for BasicErrorWarp {}
 
+
+// This is the key line which explains why all this is nessisary;
+// Reject is just a list of constraints which make this error type threadsafe.
+// So annoying to have to write all this out to emit custom errors.
+// Maybe we can convert BasicErrorWarp into an enum so we can have a few different errors without all this boilerplate for each?
 impl Reject for BasicErrorWarp{}
 
 impl fmt::Display for BasicErrorWarp {

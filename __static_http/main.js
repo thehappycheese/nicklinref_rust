@@ -5,17 +5,23 @@ let view = new ol.View({
 	zoom: 5.5,
 });
 
-if(localStorage.view){
-	try{
+if (localStorage.view) {
+	try {
 		let ls_view = JSON.parse(localStorage.view)
 		view.setCenter(ls_view.center)
 		view.setZoom(ls_view.zoom)
-	}catch(e){}
+	} catch (e) { }
+}
+
+function reset_view() {
+	view.setCenter([12898411.077810172, -3757643.0263860035]);
+	view.setZoom(5.5);
+	delete localStorage.view;
 }
 
 let featureProjection = view.getProjection();
 
-let dataProjection = new ol.format.GeoJSON().readProjection({"crs":{"type":"EPSG","properties":{"code":4326}}});
+let dataProjection = new ol.format.GeoJSON().readProjection({ "crs": { "type": "EPSG", "properties": { "code": 4326 } } });
 
 let layer_osm = new ol.layer.Tile({
 	source: new ol.source.OSM()
@@ -23,7 +29,7 @@ let layer_osm = new ol.layer.Tile({
 
 let layer_geojson = new ol.layer.Vector({
 	source: new ol.source.Vector({}),
-	style:[
+	style: [
 		new ol.style.Style({
 			stroke: new ol.style.Stroke({
 				//color: '#319FD3',
@@ -32,7 +38,7 @@ let layer_geojson = new ol.layer.Vector({
 			}),
 			image: new ol.style.Circle({
 				radius: 8,
-				stroke: new ol.style.Stroke({color: 'white', width:7}),
+				stroke: new ol.style.Stroke({ color: 'white', width: 7 }),
 			}),
 		}),
 		new ol.style.Style({
@@ -43,7 +49,7 @@ let layer_geojson = new ol.layer.Vector({
 			}),
 			image: new ol.style.Circle({
 				radius: 8,
-				stroke: new ol.style.Stroke({color: 'red', width:3}),
+				stroke: new ol.style.Stroke({ color: 'red', width: 3 }),
 			}),
 		})
 	]
@@ -55,40 +61,40 @@ let map = new ol.Map({
 	view
 });
 
-map.on("moveend",(e)=>{
+map.on("moveend", (e) => {
 	let view = map.getView();
-	localStorage.setItem("view",JSON.stringify({
-		center:view.getCenter(),
-		zoom:view.getZoom()
+	localStorage.setItem("view", JSON.stringify({
+		center: view.getCenter(),
+		zoom: view.getZoom()
 	}))
 })
 
 fetch("secrets.json")
-	.then(resp=>{
-		if(resp.ok) return resp
-		throw new Error(`Cannot continue, initial response to request for secrets not ok. ${resp.statusText}`)
+	.then(resp => {
+		if (resp.ok) return resp
+		throw new Error(`Request for secrets failed: ${resp.statusText}`)
 	})
-	.then(resp=>resp.json())
-	.catch(err=>{
-		throw new Error(`Cannot continue, secrets cannot be decoded:  ${err}`)
+	.then(resp => resp.json())
+	.catch(err => {
+		throw new Error(`Decoding secrets failed: ${err}`)
 	})
-	.then(secrets=>{
+	.then(secrets => {
 
 		window.layer_metro_map = new ol.layer.Tile({
 			source: new ol.source.XYZ({
-				url:secrets.metromap,
+				url: secrets.metromap,
 			})
 		});
-		
+
 		window.layer_skyview_tiles = new ol.layer.Tile({
 			source: new ol.source.TileArcGISRest({
-				params:{
-					FORMAT:"jpgpng",
-					compressionQuality:75,
-					TRANSPARENT:false
+				params: {
+					FORMAT: "jpgpng",
+					compressionQuality: 75,
+					TRANSPARENT: false
 				},
 				// crossOrigin:"Anonymous", // Required if we need to retrieve canvas pixle data later.
-				url:secrets.skyview
+				url: secrets.skyview
 			})
 		});
 
@@ -98,103 +104,80 @@ fetch("secrets.json")
 
 add_features(new URLSearchParams(window.location.search)).then(success => success && zoom_to_loaded_features());
 
-async function add_features(url_params, fetch_pool=undefined) {
+async function add_features(url_params, fetch_pool = undefined) {
 
-	url_params.delete("f");
+	url_params.delete("f");// geojson is default
+
 	let url_to_fetch = "/query/?" + url_params.toString();
-	
-	let fetching;
 
-	if (fetch_pool){
-		fetching = fetch_pool.fetch(url_to_fetch)
-	}else{
-		fetching = fetch(url_to_fetch)
+	let fetcher;
+
+	if (fetch_pool) {
+		fetcher = fetch_pool.fetch(url_to_fetch)
+	} else {
+		fetcher = fetch(url_to_fetch)
 	}
 
-	return fetching
-		.then(resp=>{
-			if(resp.ok) return resp
-			throw new Error(`Cannot continue, initial response not ok. ${resp.statusText}`)
+	return fetcher
+		.then(resp => {
+			if (resp.ok) return resp;
+			throw new Error(`Response not ok: ${resp.statusText}`)
 		})
-		// .then(r => r.json())
-		// .catch(err=>{
-		// 	console.log(err)
-		// 	alert("Error in response. GeoJSON could not be loaded or parsed");
-		// 	throw new Error("Error in response. GeoJSON could not be loaded or parsed")
-		// })
-		.then(r => r.text())
-		.then(text_geojson => {
+		.then(response => response.text())
+		.then(response_text => {
 
-			// temporary code to parse Rust debug output.
-			// let pat = /\[(Vector2 { x:.*?, y:.*?},? ?)+\]+/g;
-			// let mls = [];
-			// for (match of text_geojson.match(pat)){
-			// 	console.log("outer match "+ match);
-			// 	let coords = [...match.matchAll(/{ x:(.*?), y:(.*?)}/g)].map(item=>[parseFloat(item[1]),parseFloat(item[2])])
-			// 	mls.push(coords)
-			// 	//console.log(coords);
-			// }
-			let mls;
-			try{
-				mls = JSON.parse(text_geojson);
-			}catch(e){
-				return false;
+
+			let multi_line_string;
+			try {
+				multi_line_string = JSON.parse(response_text);
+			} catch (e) {
+				throw new Error(`Unable parse response: ${e.message}\n${response_text}`);
 			}
-			
-			//console.log(mls)
-			// let GEOJSON = {
-			// 	type:"Feature",
-			// 	geometry:{
-			// 		type:"MultiLineString",
-			// 		coordinates:mls
-			// 	}		
-			// };
-			//let GEOJSON = JSON.parse(text_geojson);
-			
-			let read_features = new ol.format.GeoJSON({featureProjection, dataProjection}).readFeatures(mls);
+
+			let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(multi_line_string);
 			layer_geojson.getSource().addFeatures(read_features);
 
-			
+
 			return true;
 		});
 }
 
-function zoom_to_loaded_features(){
+function zoom_to_loaded_features() {
 	let target_extent = layer_geojson.getSource().getExtent();
 	let resolution = view.getResolutionForExtent(target_extent);
-	let target_zoom = view.getZoomForResolution(resolution)/1.01;
+	let target_zoom = view.getZoomForResolution(resolution) / 1.01;
 	let target_center = ol.extent.getCenter(target_extent);
 
 	view.animate({
-		zoom:target_zoom,
-		center:target_center,
+		zoom: target_zoom,
+		center: target_center,
 		duration: 1500,
 		easing: ol.easing.easeOut
 	});
 }
 
-function radio_update(e){
+function radio_update(e) {
 	set_background(e.target.value);
 }
 
-function set_background(val){
-	try{
+function set_background(val) {
+	try {
 		map.removeLayer(layer_osm)
 		map.removeLayer(layer_skyview_tiles)
 		map.removeLayer(layer_metro_map)
 
-		switch(val){
+		switch (val) {
 			case "openstreetmap":
 				map.getLayers().insertAt(0, layer_osm)
 				break
 			case "metromap":
-			map.getLayers().insertAt(0, layer_metro_map)
+				map.getLayers().insertAt(0, layer_metro_map)
 				break
 			case "skyview":
 				map.getLayers().insertAt(0, layer_skyview_tiles)
 				break
 		}
-	}catch(e){
+	} catch (e) {
 		console.log(e)
 		alert("Error loading layer. Reverting to Open Street Maps.");
 		map.removeLayer(layer_osm);
@@ -204,76 +187,156 @@ function set_background(val){
 
 
 let demo_tour = [
-	{road:"H001", slk_from:0, slk_to:50, step:0.1}, // 500 features
-	{road:"H005", slk_from:0, slk_to:500, step:1}, // 500 features
-	{road:"H016", slk_from:0, slk_to:20, step:0.01}, // 2000 features
-	{road:"H015", slk_from:0, slk_to:20, step:0.01}, // 2000 features
-	{road:"H023", slk_from:0, slk_to:15, step:0.01}, // 1500 features
+	{ road: "H001", slk_from: 0, slk_to: 50, step: 0.1 }, // 500 features
+	{ road: "H005", slk_from: 0, slk_to: 500, step: 1 }, // 500 features
+	{ road: "H016", slk_from: 0, slk_to: 20, step: 0.01 }, // 2000 features
+	{ road: "H015", slk_from: 0, slk_to: 20, step: 0.01 }, // 2000 features
+	{ road: "H023", slk_from: 0, slk_to: 15, step: 0.01 }, // 1500 features
 ]
 
 
-function run_demo(){
+function run_demo() {
 	let fetch_pool = new Fetch_Queue(200);
-	
+
 	layer_geojson.getSource().clear();
 
-	for(item of demo_tour){
-		for(let i = item.slk_from; i < item.slk_to; i += item.step){
+	for (item of demo_tour) {
+		for (let i = item.slk_from; i < item.slk_to; i += item.step) {
 			add_features(
 				new URLSearchParams({
-					road:		item.road,
-					slk_from:	i,
-					slk_to:		i+item.step
+					road: item.road,
+					slk_from: i,
+					slk_to: i + item.step
 				}),
 				fetch_pool
 			);
 		}
 	}
 
-	fetch_pool.then(arr=>zoom_to_loaded_features());
+	fetch_pool.then(arr => zoom_to_loaded_features());
 }
 
-function fetch_batch(){
-	let te = new TextEncoder();
-	let requests = [];
-	
+
+
+
+
+
+
+let demo_tour_batch = [
+	{ road: "H002", slk_from: 0, slk_to: 50, step: 0.1 }, // 500 features
+	{ road: "H052", slk_from: 0, slk_to: 500, step: 1 }, // 500 features
+	{ road: "H018", slk_from: 0, slk_to: 30, step: 0.01 }, // 2000 features
+	{ road: "H015", slk_from: 20, slk_to: 40, step: 0.01 }, // 2000 features
+	{ road: "H038", slk_from: 0, slk_to: 15, step: 0.01 }, // 1500 features
+]
+
+
+function fetch_batch() {
+
+	layer_geojson.getSource().clear();
+	let request_batchs = [];
 
 	// one request per road
-	for(item of demo_tour){
-		
-		let total_bytes_length = 0;
-		let batched_requests = []
-		let road_bytes = te.encode(item.road);
-		let current_length = 1 + road_bytes.length + 4 + 4 + 4 + 1;
-		
+	for (item of demo_tour_batch) {
 
-		for(let i = item.slk_from; i < item.slk_to; i += item.step){
-			total_bytes_length += current_length;
-			let current_byte_array = new Uint8Array(current_length);
-			current_byte_array[0] = road_bytes.length;
-			current_byte_array.set(road_bytes, 1);
-			current_byte_array.set(Float32Array.from([i, i+item.step, 0]), 1+road_bytes.length)
-			batched_requests.push(current_byte_array);
-			
+		let total_byte_length = 0;
+		let request_batch_array = [];
+
+		for (let i = item.slk_from; i < item.slk_to; i += item.step) {
+			let bytes = binary_encode_request(item.road, i, i + item.step, 0, CWY.LRS)
+			request_batch_array.push(bytes);
+			total_byte_length += bytes.byteLength;
 		}
 
-		let result = new Uint8Array(total_bytes_length);
+		let request_batch_binary = new Uint8Array(total_byte_length);
 		let offset = 0;
-		batched_requests.forEach(byte_array=>{
-			result.set(byte_array, offset);
-			offset+=byte_array.length;
+		request_batch_array.forEach(byte_array => {
+			request_batch_binary.set(byte_array, offset);
+			offset += byte_array.byteLength;
 		})
-		requests.push(result)
-		
+		request_batchs.push(request_batch_binary)
+
 	}
-	requests.forEach(request=>{
-		fetch("/batch/",{
-			method:"POST",
-			body:request
-		})
-		.then(response=>response.text())
-		.then(response=>{
-			console.log(response);
-		})
+
+	let fetches = [];
+	request_batchs.forEach(request_batch_binary => {
+		fetches.push(
+			fetch("/batch/", {
+					method: "POST",
+					body: request_batch_binary
+				}
+			)
+			.then(response => {
+				return response.text()
+			})
+			.then(text => {
+				
+				let json = JSON.parse(text);
+				let features = [];
+				for (multi_line_string_coordinates of json) {
+					if (multi_line_string_coordinates == null) continue;
+
+					features.push({
+						type: "Feature",
+						geometry: {
+							type: "MultiLineString",
+							coordinates: multi_line_string_coordinates
+						}
+					});
+
+
+				}
+				let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(
+					{
+						type:"FeatureCollection",
+						features
+					}
+				);
+				layer_geojson.getSource().addFeatures(read_features);
+			})
+		)
 	});
+	Promise.all(fetches).then(()=>{
+		debugger
+		zoom_to_loaded_features()
+
+	});
+}
+
+
+
+let CWY = {
+	L: 0b0000_0100,
+	R: 0b0000_0001,
+	S: 0b0000_0010,
+	LR: 0b0000_0101,
+	LS: 0b0000_0110,
+	RS: 0b0000_0011,
+	LRS: 0b0000_0111
+}
+/** Encodes a request into an ArrayBuffer as follows:
+ * 	
+ * [road_name_length:u8,  road_name:UTF8...,  slk_from:f32, slk_to:f32, offset:f32, cwy:u8]
+ * 
+ * where floats are encoded in Little Endian
+ */
+function binary_encode_request(road, slk_from, slk_to, offset, cwy) {
+
+	let text_encoder = new TextEncoder();
+	let road_bytes = text_encoder.encode(road);
+
+	let buffer = new ArrayBuffer(1 + road_bytes.length + 4 + 4 + 4 + 1);
+
+
+	let road_name_chunk = new Uint8Array(buffer, 0, 1 + road_bytes.length);
+	road_name_chunk[0] = road_bytes.length;
+	road_name_chunk.set(road_bytes, 1);
+
+	let dataview = new DataView(buffer, 1 + road_bytes.length);
+	dataview.setFloat32(0, slk_from, true) // LITTLE ENDIAN
+	dataview.setFloat32(4, slk_to, true) // LITTLE ENDIAN
+	dataview.setFloat32(8, offset, true) // LITTLE ENDIAN
+	dataview.setUint8(12, cwy);
+
+	return new Uint8Array(buffer);
 }

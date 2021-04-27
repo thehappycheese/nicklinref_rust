@@ -20,7 +20,7 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 			"Tried to delete data folder ({}) and contents but: {}",
 			&s.data_dir, e
 		);
-		println!("Will attempt to proceed assuming the folder does not yet exist anyway");
+		println!("Will attempt to proceed assuming the folder does not exist anyway");
 	}
 
 	match fs::create_dir_all(&s.data_dir) {
@@ -71,7 +71,7 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 }
 
 pub async fn load_data<'a>(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
-	println!("Loading data from file");
+	println!("Loading data from file.");
 	let file_in_json = File::open(Path::new(&s.data_dir).join(Path::new("output.json.lz4")))?;
 	let decomp = lz_fear::framed::decompress_frame(file_in_json)?;
 	let result: LayerSaved = serde_json::from_reader(&mut &decomp[..])?;
@@ -139,7 +139,6 @@ impl Index<&Cwy> for RoadDataByCwy {
 pub type LookupMap = HashMap<char, HashMap<String, RoadDataByCwy>>;
 
 pub fn perform_analysis(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std::error::Error>> {
-	println!("Analysing data");
 	let mut map_from_first_letter: LookupMap = HashMap::new(); // map_from_first_letter_to_roads
 
 	let (mut previous_road, mut previous_cwy, mut first_letter) = match layer.features.iter().next()

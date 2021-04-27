@@ -2,7 +2,7 @@ use crate::esri_serde::Cwy;
 use serde;
 use serde::de::{Deserialize, Deserializer, Visitor};
 
-use std::str::{from_utf8};
+//use std::str::Str
 use std::fmt;
 use std::convert::TryFrom;
 use std::iter::IntoIterator;
@@ -53,6 +53,22 @@ pub enum RequestedCwy {
 	RS,
 	LRS,
 }
+
+impl From<u8> for RequestedCwy{
+	fn from(item:u8)->Self{
+		match item{
+			0b0000_0100=>RequestedCwy::L,
+			0b0000_0001=>RequestedCwy::R,
+			0b0000_0010=>RequestedCwy::S,
+			0b0000_0101=>RequestedCwy::LR,
+			0b0000_0110=>RequestedCwy::LS,
+			0b0000_0011=>RequestedCwy::RS,
+			0b0000_0111=>RequestedCwy::LRS,
+			_=>RequestedCwy::LRS
+		}
+	}
+}
+
 impl IntoIterator for &RequestedCwy{
 	type Item = Cwy;
 	type IntoIter = std::vec::IntoIter<Self::Item>;
@@ -136,14 +152,14 @@ pub struct QueryParameters {
 	pub slk_to: f32,
 
 	#[serde(default = "default_offset")]
-	pub offset:f64,
+	pub offset:f32,
 
 	#[serde(default = "default_output_format")]
 	pub f: OutputFormat,
 }
 
-fn default_offset() -> f64 {
-	0.0f64
+fn default_offset() -> f32 {
+	0.0f32
 }
 
 fn default_cwy() -> RequestedCwy {
@@ -154,10 +170,10 @@ fn default_output_format() -> OutputFormat {
 	OutputFormat::GEOJSON
 }
 
-struct QueryParameterBatch(Vec<QueryParameters>);
+pub struct QueryParameterBatch(pub Vec<QueryParameters>);
 
 #[derive(Debug)]
-struct BatchQueryParametersDecodeError;
+pub struct BatchQueryParametersDecodeError;
 impl std::error::Error for BatchQueryParametersDecodeError{}
 impl std::fmt::Display for BatchQueryParametersDecodeError{
 	fn fmt(&self, f:&mut fmt::Formatter) -> std::fmt::Result{
@@ -166,22 +182,40 @@ impl std::fmt::Display for BatchQueryParametersDecodeError{
 }
 
 impl TryFrom<bytes::Bytes> for QueryParameterBatch{
-	type Error = Box<dyn std::error::Error>;
-	fn try_from(body:bytes::Bytes) -> Result<QueryParameterBatch, Self::Error> {
-		let params:Vec<QueryParameters> = vec![];
+	type Error = BatchQueryParametersDecodeError; //Box<dyn std::error::Error>;
+	fn try_from(buffer:bytes::Bytes) -> Result<QueryParameterBatch, Self::Error> {
+		
+		let mut params:Vec<QueryParameters> = vec![];
+		
 
-		let mut offset:usize = 0;
-		while offset < body.len(){
+		let mut buffer_iter = buffer.iter();
+
+		loop {
+			let road_name_byte_length = match buffer_iter.next(){
+				Some(&num) => num as usize,
+				None => break
+			};
+			let road_name:Vec<u8> = buffer_iter.by_ref().take(road_name_byte_length).map(|&x|x).collect();
 			
-			let road_name_length:usize = *body.get(offset).ok_or(BatchQueryParametersDecodeError)? as usize;
+			let road_name = std::str::from_utf8(&road_name[..]).or(Err(BatchQueryParametersDecodeError))?;
 
-			let current_query_length = 1+road_name_length+4+4+4+1;
-			offset += 1;
-			let road_name_bytes = body.get(offset..offset + road_name_length).ok_or(BatchQueryParametersDecodeError)?;
-			offset += road_name_length;
-			let road_name = from_utf8(road_name_bytes).ok_or(BatchQueryParametersDecodeError)?;
-			let road_name = body.get(offset..offset+road_name_length).ok_or(BatchQueryParametersDecodeError)?;
+			let other_bytes = buffer_iter.by_ref().take(13).map(|&x|x).collect::<Vec<u8>>();
+			if other_bytes.len()!=13{
+				return Err(BatchQueryParametersDecodeError)
+			}
+			let slk_from = f32::from_le_bytes([other_bytes[0],other_bytes[1],other_bytes[2],other_bytes[3]]); // floats come packed in french bytes apparently ;)
+			let slk_to = f32::from_le_bytes([other_bytes[4],other_bytes[5],other_bytes[6],other_bytes[7]]);
+			let offset = f32::from_le_bytes([other_bytes[8],other_bytes[9],other_bytes[10],other_bytes[11]]);
+			let cwy:RequestedCwy = other_bytes[12].into();
+			params.push(QueryParameters{
+				road:road_name.to_string(),
+				slk_from,
+				slk_to,
+				offset,
+				cwy,
+				f:OutputFormat::JSON
+			})
 		}
-		QueryParameterBatch(params)
+		Ok(QueryParameterBatch(params))
 	}
 }
