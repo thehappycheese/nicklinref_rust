@@ -2,3 +2,4 @@ target/
 DEL_ME/
 __data_dir/
 secrets.json
+.vscode/
