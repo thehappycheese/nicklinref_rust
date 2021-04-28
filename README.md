@@ -166,11 +166,11 @@ function binary_encode_request(road, slk_from, slk_to, offset, cwy) {
     road_name_chunk[0] = road_bytes.length;
     road_name_chunk.set(road_bytes, 1);
 
-    let dataview = new DataView(buffer, 1 + road_bytes.length);
-    dataview.setFloat32(0, slk_from, true) // LITTLE ENDIAN
-    dataview.setFloat32(4, slk_to, true) // LITTLE ENDIAN
-    dataview.setFloat32(8, offset, true) // LITTLE ENDIAN
-    dataview.setUint8(12, CWY_LOOKUP[cwy.toUpperCase()] ?? 0); // use 0 if lookup fails
+    let data_view = new DataView(buffer, 1 + road_bytes.length);
+    data_view.setFloat32(0, slk_from, true) // LITTLE ENDIAN
+    data_view.setFloat32(4, slk_to, true) // LITTLE ENDIAN
+    data_view.setFloat32(8, offset, true) // LITTLE ENDIAN
+    data_view.setUint8(12, CWY_LOOKUP[cwy.toUpperCase()] ?? 0); // use 0 if lookup fails
 
     return new Uint8Array(buffer);
 }
