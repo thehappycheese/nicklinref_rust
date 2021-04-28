@@ -18,7 +18,7 @@ use unit_conversion::convert_metres_to_degrees;
 use update_data::{update_data, load_data, perform_analysis, LookupMap, RoadDataByCwy};
 use decode_query_parameters::{QueryParameters, OutputFormat, QueryParameterBatch};
 use esri_serde::{LayerSaved};
-use std::net::{IpAddr, SocketAddr};
+use std::net::{SocketAddr};
 use basic_error::BasicErrorWarp;
 
 
@@ -109,15 +109,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	// TODO: warp docs reccomend that all rejections should be handled. I havent figured that out just yet.
 
-	let address:SocketAddr = SocketAddr::new(IpAddr::V4(settings.server), settings.port);
+	let address:SocketAddr = "127.0.0.1:2443".parse().unwrap();
 
-
-	println!("Serving at {:?}", address);
-	warp::serve(
+	let routes = 
 		route_static
 		.or(route_query)
-		.or(route_batch)
-	).run(address).await;
+		.or(route_batch);
+
+	println!("Serving at {:?}", address);
+	warp::serve(routes
+		.with(
+			warp::cors()
+			.allow_any_origin()
+		)
+	)
+	.tls()
+	.cert_path("./self_signed_certs/testcert-opensslextract.crt")
+	.key_path("./self_signed_certs/testcert-decypted.key")
+	.run(address).await;
 	
 	Ok(())
 }

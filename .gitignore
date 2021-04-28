@@ -3,3 +3,4 @@ DEL_ME/
 __data_dir/
 secrets.json
 .vscode/
+self_signed_certs/
