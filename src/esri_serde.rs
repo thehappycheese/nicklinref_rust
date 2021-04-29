@@ -26,21 +26,26 @@ impl Ord for LayerFeatureAttr {
 		match self.ROAD.cmp(&other.ROAD) {
 			std::cmp::Ordering::Less=>std::cmp::Ordering::Less,
 			std::cmp::Ordering::Equal=>{
-				match self.CWY.cmp(&other.CWY){
-					std::cmp::Ordering::Less=>std::cmp::Ordering::Less,
-					std::cmp::Ordering::Equal=>{
-						if self.START_SLK.is_nan() || other.START_SLK.is_nan(){
-							std::cmp::Ordering::Equal
-						}else if self.START_SLK == other.START_SLK{
-							std::cmp::Ordering::Equal
-						}else if self.START_SLK < other.START_SLK{
-							std::cmp::Ordering::Less
-						}else{
-							std::cmp::Ordering::Greater
-						}
-					},
-					std::cmp::Ordering::Greater=>std::cmp::Ordering::Greater
-				}
+				
+				// The current implementation does not rely on ordering by START_SLK. We can finish the algorithm earlier:
+				self.CWY.cmp(&other.CWY)
+
+				// TODO: don't forget you removed this:
+				// match self.CWY.cmp(&other.CWY){
+				// 	std::cmp::Ordering::Less=>std::cmp::Ordering::Less,
+				// 	std::cmp::Ordering::Equal=>{
+				// 		if self.START_SLK.is_nan() || other.START_SLK.is_nan(){
+				// 			std::cmp::Ordering::Equal
+				// 		}else if self.START_SLK == other.START_SLK{
+				// 			std::cmp::Ordering::Equal
+				// 		}else if self.START_SLK < other.START_SLK{
+				// 			std::cmp::Ordering::Less
+				// 		}else{
+				// 			std::cmp::Ordering::Greater
+				// 		}
+				// 	},
+				// 	std::cmp::Ordering::Greater=>std::cmp::Ordering::Greater
+				// }
 			},
 			std::cmp::Ordering::Greater=>std::cmp::Ordering::Greater
 		}
@@ -60,7 +65,7 @@ pub struct LayerFeature {
 
 #[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
-/// This is the struct/document that will be deserialised from what is recieved over the interwebs.
+/// This is the struct/document that will be deserialized from what is received over the interwebs.
 pub struct LayerDownloadChunk {
 	#[serde(default)]
 	pub exceededTransferLimit: bool,
@@ -75,7 +80,8 @@ pub struct LayerSavedFeature {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-/// This is the struct/document that will be saved to the harddrive in some format or another.
+
+/// This is the struct / document that will be saved to local storage
 pub struct LayerSaved {
 	pub features: Vec<LayerSavedFeature>,
 }

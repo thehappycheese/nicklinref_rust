@@ -153,7 +153,7 @@ fn get_stuff(query:&QueryParameters, data:&Arc<LayerSaved>, data_index:&Arc<Look
 		},
 		None=>{return Err("could not get first letter of road")}
 	}{
-		Some(data_lookup_subtable)=>data_lookup_subtable,
+		Some(data_lookup_sub_table)=>data_lookup_sub_table,
 		None=>{return Err("full road name not found. lookup failed")}
 	};
 
