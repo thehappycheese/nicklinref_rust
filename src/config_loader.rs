@@ -58,7 +58,7 @@ impl Settings {
 		// override whatever we got with environment variables.
 		read_env_var_with_fallback("NLR_ADDR", &mut settings.NLR_ADDR);
 		read_env_var_with_fallback("NLR_PORT", &mut settings.NLR_PORT);
-		read_env_var_with_fallback("NLR_DATA", &mut settings.NLR_DATA_FILE);
+		read_env_var_with_fallback("NLR_DATA_FILE", &mut settings.NLR_DATA_FILE);
 		read_env_var_with_fallback("NLR_DATA_SOURCE_URL", &mut settings.NLR_DATA_SOURCE_URL);
 		read_env_var_with_fallback("NLR_STATIC_HTTP", &mut settings.NLR_STATIC_HTTP);
 		read_env_var_with_fallback("NLR_CERT_PATH", &mut settings.NLR_CERT_PATH);
