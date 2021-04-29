@@ -8,7 +8,9 @@ pub struct Settings {
 	pub port:u16,
 	pub data_dir:String,
 	pub data_url:String,
-	pub static_dir:String
+	pub static_dir:String,
+	pub cert_path:String,
+	pub key_path:String,
 }
 
 impl Settings {

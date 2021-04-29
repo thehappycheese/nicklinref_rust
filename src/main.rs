@@ -5,7 +5,7 @@ mod basic_error;
 mod decode_query_parameters;
 mod unit_conversion;
 
-use std::{convert::TryFrom, str};
+use std::{convert::TryFrom, net::IpAddr, str};
 use std::sync::Arc;
 use std::convert::Infallible;
 
@@ -24,7 +24,8 @@ use basic_error::BasicErrorWarp;
 
 
 /// Moves a clone of an Arc<T> into a warp filter chain.
-/// I do not understand why this is required, 
+/// The closure here takes ownership of the first clone, and provides yet another clone of the arc whenever it is called.
+/// I think this lets the first Arc clone live as long as the filter
 /// but I spent HOURS trying to move a reference to data and data_index
 /// into the filter closures with no success. This is the only way that works,
 /// I can only assume this is idiomatic rust. Idiotic more like.
@@ -103,34 +104,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		});
 
 	
-	let route_static = 
+	let route_show = 
 		warp::path("show")
 		.and(warp::fs::dir(settings.static_dir.clone()));
 
-	// TODO: warp docs reccomend that all rejections should be handled. I havent figured that out just yet.
+	// TODO: warp docs recommend that all rejections should be handled. I haven't figured that out just yet.
 
-	let address:SocketAddr = "127.0.0.1:2443".parse().unwrap();
-
-	let routes = 
-		route_static
+	let route_health = warp::get().and(warp::path("health")).and_then(health_handler);
+	
+	let filter = 
+		route_show
 		.or(route_query)
-		.or(route_batch);
-
-	println!("Serving at {:?}", address);
-	warp::serve(routes
+		.or(route_batch)
+		.or(route_health)
 		.with(
 			warp::cors()
-			.allow_any_origin()
-		)
+			.allow_any_origin() 
+		);
+		// TODO: we can probably limit this to the PowerBI visual, rather than allow_any_origin.
+		//  I don't know how PowerBI desktop would like that...?
+
+	let address:SocketAddr = SocketAddr::new(IpAddr::V4(settings.server), settings.port);
+	println!("Serving at {:?}", address);
+	warp::serve(
+		filter
 	)
 	.tls()
-	.cert_path("./self_signed_certs/testcert-opensslextract.crt")
-	.key_path("./self_signed_certs/testcert-decypted.key")
+	.cert_path(&settings.cert_path)
+	.key_path(&settings.key_path)
 	.run(address).await;
 	
 	Ok(())
 }
 
+async fn health_handler() -> Result<impl warp::Reply, Infallible> {
+	Ok("OK")
+}
 
 
 
