@@ -38,9 +38,12 @@ where T:Send+Sync+Clone{
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	
-	let settings:Arc<Settings> = match Settings::new(){
+	let settings:Arc<Settings> = match Settings::get(){
 		Ok(settings)=>settings,
-		Err(e)=>panic!("Unable to load config.json:  {}", e)
+		Err(e)=>{
+			println!("Unable to load settings from environment variables or from any .json file specified with the --config command line option:  {}", e);
+			return Err(e);
+		}
 	}.into();
 
 
@@ -106,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	
 	let route_show = 
 		warp::path("show")
-		.and(warp::fs::dir(settings.static_dir.clone()));
+		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
 
 	// TODO: warp docs recommend that all rejections should be handled. I haven't figured that out just yet.
 
@@ -124,14 +127,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		// TODO: we can probably limit this to the PowerBI visual, rather than allow_any_origin.
 		//  I don't know how PowerBI desktop would like that...?
 
-	let address:SocketAddr = SocketAddr::new(IpAddr::V4(settings.server), settings.port);
+	let address:SocketAddr = SocketAddr::new(IpAddr::V4(settings.NLR_ADDR), settings.NLR_PORT);
 	println!("Serving at {:?}", address);
 	warp::serve(
 		filter
 	)
 	.tls()
-	.cert_path(&settings.cert_path)
-	.key_path(&settings.key_path)
+	.cert_path(&settings.NLR_CERT_PATH)
+	.key_path(&settings.NLR_PRIVATE_KEY_PATH)
 	.run(address).await;
 	
 	Ok(())

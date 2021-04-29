@@ -1,4 +1,3 @@
-//use serde_json::Value as JsonValue;
 use nickslinetoolsrust::vector2::Vector2;
 use serde::{Deserialize, Serialize};
 
@@ -80,7 +79,6 @@ pub struct LayerSavedFeature {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-
 /// This is the struct / document that will be saved to local storage
 pub struct LayerSaved {
 	pub features: Vec<LayerSavedFeature>,

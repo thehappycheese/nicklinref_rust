@@ -1,6 +1,6 @@
 target/
 DEL_ME/
-__data_dir/
+data/
 secrets.json
 .vscode/
-self_signed_certs/
+certs/

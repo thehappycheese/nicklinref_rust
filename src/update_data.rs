@@ -14,23 +14,21 @@ use crate::basic_error::BasicError;
 use crate::config_loader::Settings;
 use crate::esri_serde::{Cwy, LayerDownloadChunk, LayerSaved, LayerSavedFeature};
 
+
 pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
-	if let Err(e) = fs::remove_dir_all(&s.data_dir) {
-		println!(
-			"Tried to delete data folder ({}) and contents but: {}",
-			&s.data_dir, e
-		);
-		println!("Will attempt to proceed assuming the folder does not exist anyway");
+
+	if let Err(e) = fs::remove_file(&s.NLR_DATA_FILE) {
+		println!("Tried to delete the data file '{}' but: {}", &s.NLR_DATA_FILE, e);
+		println!("Will attempt to proceed assuming the file does not exist");
 	}
 
-	match fs::create_dir_all(&s.data_dir) {
-		Ok(_) => {}
-		Err(e) => {
-			println!("Tried to create data folder ({}) but: {}", &s.data_dir, e);
-			println!("Will attempt to proceed assuming the folder already exists");
+	let file_out = match File::create(Path::new(&s.NLR_DATA_FILE)){
+		Ok(file)=>file,
+		Err(e)=>{
+			println!("Fatal: Tried to create a data file '{}' but: {}", &s.NLR_DATA_FILE, e);
+			return Err(Box::new(e));
 		}
 	};
-	let file_out = File::create(Path::new(&s.data_dir).join(Path::new("output.json.lz4")))?; // errors out if file cant be created.
 
 	let mut document_to_save = LayerSaved {
 		features: Vec::with_capacity(181000), // 180303
@@ -40,7 +38,7 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 	println!("Downloading fresh data");
 	loop {
 		print!(".");
-		let url = format!("{}&resultOffset={}", s.data_url.clone(), offset);
+		let url = format!("{}&resultOffset={}", s.NLR_DATA_SOURCE_URL.clone(), offset);
 		let json: LayerDownloadChunk = reqwest::get(url).await?.json().await?;
 		if json.geometryType != "esriGeometryPolyline" {
 			return Err(Box::new(BasicError::new("Rest service returned an object that did not have geometryType:esriGeometryPolyline")));
@@ -70,9 +68,9 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 	Ok(document_to_save)
 }
 
-pub async fn load_data<'a>(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
+pub async fn load_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
 	println!("Loading data from file.");
-	let file_in_json = File::open(Path::new(&s.data_dir).join(Path::new("output.json.lz4")))?;
+	let file_in_json = File::open(Path::new(&s.NLR_DATA_FILE))?;
 	let decomp = lz_fear::framed::decompress_frame(file_in_json)?;
 	let result: LayerSaved = serde_json::from_reader(&mut &decomp[..])?;
 	Ok(result)
