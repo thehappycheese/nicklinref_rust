@@ -4,75 +4,85 @@
 ## Table of Contents: <!-- omit in toc -->
 
 - [1. Introduction](#1-introduction)
-  - [1.1. Purpose](#11-purpose)
-  - [1.2. Yes, But What For? (PowerBI Visuals)](#12-yes-but-what-for-powerbi-visuals)
-  - [1.3. Previous python version project](#13-previous-python-version-project)
+	- [1.1. Purpose](#11-purpose)
+	- [1.2. Doesn't this already exist? (No)](#12-doesnt-this-already-exist-no)
+	- [1.3. But What For? (PowerBI Visuals)](#13-but-what-for-powerbi-visuals)
+		- [1.3.1. 1.3.1 Icon Map](#131-131-icon-map)
+		- [1.3.2. 1.3.2 NickMap (My Custom Visual)](#132-132-nickmap-my-custom-visual)
 - [2. Usage](#2-usage)
-  - [2.1. `/query/`](#21-query)
-    - [2.1.1. Example `/query/`](#211-example-query)
-  - [2.2. `/show/`](#22-show)
-  - [2.3. `/batch/`](#23-batch)
-- [3. Configuration](#3-configuration)
-- [4. Data download and refresh](#4-data-download-and-refresh)
-- [5. Coordinate Reference System (CRS)](#5-coordinate-reference-system-crs)
-- [6. Future Features](#6-future-features)
+	- [2.1. Usage - `/query/` Mode](#21-usage---query-mode)
+		- [2.1.1. Example `/query/`](#211-example-query)
+	- [2.2. Usage - `/show/` Mode](#22-usage---show-mode)
+	- [2.3. Usage - `/batch/` Mode](#23-usage---batch-mode)
+	- [2.4. Usage - Configuration](#24-usage---configuration)
+	- [2.5. Usage - Data Download and Refresh](#25-usage---data-download-and-refresh)
+	- [2.6. Usage - Coordinate Reference System (CRS)](#26-usage---coordinate-reference-system-crs)
+- [3. Docker](#3-docker)
+- [4. Bugs, Issues, Future Features](#4-bugs-issues-future-features)
+- [5. Comparison with previous python version](#5-comparison-with-previous-python-version)
 
 ## 1. Introduction
 
 ### 1.1. Purpose
 
-Runs a REST server on localhost:8025 which will slice portions of the Main Roads
-Western Australia road network based on query parameters and returns a GeoJSON
-or WKT feature.
+This application is a REST service that can slice portions of the Western
+Australia road network geometry and return either `GeoJSON` or `WKT` features.
 
-The query parameters `&road=...`, `&slk_from=...`, `&slk_to=...`  are required.
-The parameters `&cwy=...` and `&offset=...` are optional.
+To use it, you need to compile and run it, then visit / fetch data from the
+server URL (eg `https://localhost:8080/query/?...`), with the URL parameters
+`?road=...&slk_from=...&slk_to=...`. Optionally, the parameters `&cwy=...` and
+`&offset=...` can be used to select a specific carriageway, and/or offset the
+resulting geometry. Use the `&f=...` parameter to select WKT or GeoJSON output
+(See usage section below).
 
-The main difference from the GeoJSON service available at<http://data.wa.gov.au>
-is that the `LineString` geometry will be properly truncated at the requested
-SLK interval endpoints rather than simply filtered SQL-style like the ESRI rest
-services.
+### 1.2. Doesn't this already exist? (No)
 
-### 1.2. Yes, But What For? (PowerBI Visuals)
+This REST service will properly truncate the geometry at the requested
+`slk_from` and `slk_to` endpoints. This is different from the from the REST
+services already available at <http://data.wa.gov.au> which can only filter
+records that intersect the requested range according to the row structure of the
+underlying storage table.
 
-The REST service can be conveniently called from Excel or PowerBI to augment any
-table of data with a geometry column. This can then be used to visualise the
-data in Power BI.
+Each row (in the database storing the Road Network) has a fixed `START_SLK` and
+`END_SLK`, contains the road geometry for that section. Each row typically
+represents a section of road from one intersection to the next. The REST
+services at <http://data.wa.gov.au> can only return whole rows, and are not able
+to return only a portion of the road geometry if the requested range partly
+intersects with a row's SLK range.
+
+### 1.3. But What For? (PowerBI Visuals)
+
+This application can be conveniently used from Excel using the
+`=WEBSERVICE(...)` formula or from PowerBI using the `=Web.Contents(...)`
+function to augment any table of data with a geometry column. This can then be
+used to visualise the data in Power BI.
+
+#### 1.3.1. 1.3.1 Icon Map
+
+IconMap can be used with any table of data containing a column consisting of WKT.
+<https://icon-map.com/>
+IconMap is an excellent visual which is finished and polished and is easy to download and use.
+
+#### 1.3.2. 1.3.2 NickMap (My Custom Visual)
 
 See my related PowerBI custom visual project here:
-<https://github.com/thehappycheese/powerbi-visual-geojson-map-1>
+<https://github.com/thehappycheese/powerbi-visual-geojson-map-1> This visual is
+A work-in-progress and there is no compiled visual ready for distribution.
 
-In particular, note the branch called 'live' which aspires to dynamically
-georeference data by relying on some instance of this REST service and
-the `/batch/` feature described below.
+If everything goes to plan, this visual might be better than IconMap:
 
-### 1.3. Previous python version project
+![screenshot](https://github.com/thehappycheese/powerbi-visual-geojson-map-1/raw/main/git_docs/hero_image.jpg)
 
-This is a rust implementation of my previous project written in python:
-<https://github.com/thehappycheese/linear_referencing_geocoding_server>
+> **Note:** the `live` branch of this project uses the new `/batch/`
+> feature described below to _dynamically_ georeference the data, so that
+> augmenting the source data ahead of time is not required :)
 
-Note there are some differences in the REST API from the previous python
-version; For example:
+![Live Georeferencing field wells](./readme_extras/live_georeferencing.jpg)
 
-- The `&cway=...` parameter has been renamed to `&cwy=...` in this version.
-- Only `MultiLineString` features are returned; this means that `&slk_from`
-  should not be equal to `&slk_to` for valid results.
-- etc... please read the new documentation below carefully.
-
-I plan to abandon the python version and maintain this rust version in the
-future. This is because
-
-| Issue        | Python                                                                                                                                                                                                                   | Rust                                                                                                                                                                                                                                                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Speed        | Slow. 5 minutes + to georeference 12000 items.                                                                                                                                                                           | **Super fast**. The network connection is the bottleneck. Less than 30 seconds to georeference 12000 rows when used one row at a time, effectively instantaneous in `/batch/` mode.                                                                                                                                                                               |
-| RAM          | Over 700Mb                                                                                                                                                                                                               | 70Mb (180Mb peek)                                                                                                                                                                                                                                                                                                                                                 |
-| Startup time | Very slow.                                                                                                                                                                                                               | Also a bit slow (due to reading the input data and decompressing it in memory on every startup) but still much faster than the python version.                                                                                                                                                                                                                                                       |
-| Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform, It produces a single statically linked binary which is very easy to distribute. Due to the magic of Cargo and the rust toolchain, it is incredibly easy to clone from github and compile without complicated setup. The only complication I have experienced on Debian was the need to manually install libssl-dev. |
-| Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar.                                    |
 
 ## 2. Usage
 
-### 2.1. `/query/`
+### 2.1. Usage - `/query/` Mode
 
 By default query mode can be accessed at the following address:
 
@@ -102,21 +112,22 @@ The response looks like this:
 MULTILINESTRING ((115.88771097361135 -31.967604589743765,115.88776331305647 -31.96753166223028,115.88782456479156 -31.967494045166685,115.88808285746482 -31.967581573012584,115.88842643824691 -31.967706811122067,115.88865106830647 -31.967794863020398,115.88878639134748 -31.967856418305686,115.88961385220324 -31.968270404421514),(115.88961222617614 -31.96826961114868,115.89009682355594 -31.968500014510138),(115.89009709103813 -31.968500142226866,115.8908060320806 -31.96884008302064,115.89130780129135 -31.96906658240955),(115.89129847166095 -31.9690630113479,115.8924861744535 -31.96944832848648),(115.89248599022535 -31.969448268938134,115.89367451654047 -31.969831024006037),(115.89367516412221 -31.96983123526756,115.89489443528633 -31.970234120891217),(115.89489484503049 -31.970234348879462,115.8952199535067 -31.97034351139344,115.89552559070945 -31.970457312501807,115.89572276324779 -31.97054445312055,115.89588899502093 -31.97062796284781,115.89603052161054 -31.9707213605839),(115.89603611706656 -31.97072540301373,115.8961699852627 -31.970830173406412,115.89636973106218 -31.970999046961516,115.89654509709025 -31.971164236270756,115.89708949236724 -31.971705035229636),(115.88735210575929 -31.967327078117492,115.88761740846113 -31.967472091243042),(115.88761495220085 -31.96747075121283,115.88782449298621 -31.967576711138406))
 ```
 
-### 2.2. `/show/`
+### 2.2. Usage - `/show/` Mode
 
 Show mode works the same as `/query/` mode except that instead of returning raw
 data, it displays an interactive map when viewed in the browser. This is useful
 to confirm that queries are working as intended.
 
 <http://localhost:8025/show/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt>
-![show_demo.jpg](readme_img/show_demo.jpg)
+![show_demo.jpg](./readme_extras/show_demo.jpg)
 
 Query mode can easily be used from Excel with the `=WEBSERVICE()` formula, or
 from Power BI using the `=Web.Contents()` function.
 
-### 2.3. `/batch/`
+### 2.3. Usage - `/batch/` Mode
 
-`/batch/` queries allow faster bulk georeferecing with minimal network traffic.
+`/batch/` mode is an advanced feature that allows ultra-fast georeferecing with minimal network traffic.
+This mode exists to integrate with PowerBI custom visuals.
 
 This mode expects a `POST` request to <http://localhost:8025/batch/> by default.
 The body of the request must be binary data consisting of a series of frames
@@ -241,44 +252,60 @@ The output of the script above is shown below:
 }
 ```
 
-## 3. Configuration
+### 2.4. Usage - Configuration
 
-The application is hard-coded to look for a file called `config.json` in the
-current working directory. If not present the application will `panic!`™ and
-close with a non-zero exit code.
+To load configuration, the application will take the following steps:
 
-The content of `config.json` file should look like this:
+1. Check to see if a config file has been specified on the command line using the `--config` option:
+
+```shell
+nicklinref.exe --config ./config.json
+```
+
+2. If no `--config` was specified, then load the hard-coded default options. The defaults are shown below:
 
 ```json
 {
-    "server":"0.0.0.0",
-    "port":8025,
-    "data_dir":"./__data_dir",
-    "data_url":"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
-    "static_dir":"./__static_http"
+	"NLR_ADDR":"0.0.0.0",
+	"NLR_PORT":8080,
+	"NLR_DATA_FILE":"./data/data.json.lz4",
+	"NLR_DATA_SOURCE_URL":"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
+	"NLR_STATIC_HTTP":"./__static_http",
+	"NLR_CERT_PATH":"./certs/public.crt",
+	"NLR_PRIVATE_KEY_PATH":"./certs/decrypted_private.key"
 }
 ```
 
-| Property     | Description                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `server`     | A string containing an IPV4 address. 0.0.0.0 will allow requests from anywhere. Using 127.0.0.1 wil limit traffic to your own machine for testing purposes.                                                                                                                                                                                                                                                                     |
-| `port`       | A port number.                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `data_dir`   | This directory will be used to store the road geometry data. When the data is missing the application will try to **delete this folder and all of its contents** before trying to re-download fresh data. so don't keep anything else in the specified directory, or specify a location that contains important files.                                                                                                          |
-| `data_url`   | This is the ArcGIS REST service where the road network is downloaded from. It is assumed that multiple requests are required due to request limits, and the `&resultOffset=...` parameter is used to repeatedly fetch more data. Also note only certain fields are fetched and the output spatial reference is explicitly specified. ESRI's own json format is expected as `&f=geojson` format did not work for the default URL |
-| `static_dir` | Used by the /show/ feature to display an interactive map. the directory specified by this config option should exist or I think the application will crash on startup.                                                                                                                                                                                                                                                          |
+3. Override any options with any available environment variables with matching names.
 
-## 4. Data download and refresh
+The following table describes the configuration options in more detail:
 
-The application looks for a file called `output.json.lz4` in the directory
-specified by the `"data_dir"` field in `config.json`. If the file or the
-directory are not found, the application will try to delete the specified
-directory (**and all of it's contents! be careful what directory you specify and
-where the working directory is!**) and download replacement data from the
-`"data_url"` specified in `config.json`.
+| Property               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NLR_ADDR`             | A string containing an IPV4 address. 0.0.0.0 will allow requests from anywhere. Using 127.0.0.1 wil limit traffic to your own machine for testing purposes.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `NLR_PORT`             | A port number.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `NLR_DATA_FILE`        | The filename of the data cached from `NLR_DATA_SOURCE_URL`. **The directory must already exist**. If the file does not already exist then it will be created and fresh data will be downloaded.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `NLR_DATA_SOURCE_URL`  | This is the ArcGIS REST service where the road network is downloaded from. It is assumed that multiple requests are needed and the `&resultOffset=...` parameter is used to repeatedly fetch more data. Only certain fields are fetched `outFields=ROAD,START_SLK,END_SLK,CWY` and the output spatial reference is specified `&outSR=4326`. ESRI's own json format (`&f=json`) is expected because `&f=geojson` does not seem to work properly. Also note that currently the field names `ROAD`, `START_SLK`, `END_SLK`, `CWY` are hard-coded and must exist on the incoming data. |
+| `NLR_STATIC_HTTP`      | Used by the `/show/` feature to display an interactive map. the directory specified by this config option should exist or I think the application will crash on startup. The directory can probably be empty though if it is not required. The `__static_http` folder in this repo contains the files required.                                                                                                                                                                                                                                                                    |
+| `NLR_CERT_PATH`        | A certificate (public key) Used to serve HTTPS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `NLR_PRIVATE_KEY_PATH` | A unencrypted private key used to serve HTTPS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
-To refresh your data, simply manually delete the folder and restart the server.
+> Note:
+>
+> For testing purposes A suitable self signed certificate and key can be
+> generated like this:
+>
+> `openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=AU/ST=SomeState/L=SomeTown/O=You/CN=localhost" -keyout decrypted_private.key -out public.crt`
+>
+> This will cause a nasty security notice when accessed via the browser.
 
-## 5. Coordinate Reference System (CRS)
+### 2.5. Usage - Data Download and Refresh
+
+To refresh your data, simply manually delete the file specified by the
+`NLR_DATA_FILE` option and restart the application. Fresh data will be
+downloaded.
+
+### 2.6. Usage - Coordinate Reference System (CRS)
 
 The default CRS is EPSG:4326 which is also called WGS84 for eldritch reasons
 beyond mortal comprehension (see <https://spatialreference.org/ref/epsg/wgs-84/>)
@@ -290,26 +317,54 @@ approximation for this which will not work if the CRS is changed.
 It is therefore important that the input data is loaded in EPSG:4326. I believe
 the `&outSR=4326` parameter in the following URL accomplishes this.
 
-## 6. Future Features
+## 3. Docker
 
-- Prevent crash when missing `config.json`
-- Allow environment variables as an alternative to `config.json`
+You can build a version using the dockerfile that I put here:
+<https://github.com/thehappycheese/nicklinref_rust/wiki/Dockerfile>
+
+> **Note:**
+>
+> Currently the dockerfile generates a self-signed certificate
+> as part of the build to enable HTTPS.
+>
+> This is for testing purposes only and causes a warning when
+> visiting the `/query/` or `/show/` page in the browser.
+>
+> The `/batch/` function cannot be used by the PowerBI custom visual
+> i am working on unless the user manually adds the certificates 
+> to their own trusted root certificate store.
+
+## 4. Bugs, Issues, Future Features
+
+- The current version serves all traffic over HTTPS. However, only the `/batch/` mode used by my custom PowerBI visual requires this HTTPS. I could potentially serve them separately if that helps.
+- I have discovered `FastCGI`; this is the exact description of what I need.
 - Prevent crash when missing `static_dir`
-- Avoid deleting the `data_dir` as this might accidentally point to some
-  unintended folder and cause loss of user data.
 - Allow multiple features to be requested in `/query/` mode using the POST
   method with a json request body
 - Allow requests where `slk_from` == `slk_to`, return `Point` and / or
   `MultiPoint` features in this case.
   - And / or, create a new path `/query_points/` which expects point requests only
-- Decrease startup time to allow running in azure functions or similar?
-  - I should re-consider using a database lookup instead of in-memory lookup. It
-    seems like network performance is going to be the bottleneck now anyway...
-    the ultra speed of in-memory lookup may be wasted. It is hard to predict how
-    much slower this would be though. Optimising query plans didn't go well last
-    time I tried... the database wants to sit and "TABLE SCAN" everything. It
-    would take an expert to know how to index the database to get the kind of
-    performance I would like. But, if I did get that working, it would make this
-    application much lighter and faster and suitable for Azure functions or
-    similar.
-- Create docker image
+
+## 5. Comparison with previous python version
+
+This is a rust implementation of my previous project written in python:
+<https://github.com/thehappycheese/linear_referencing_geocoding_server>
+
+Note there are some differences in the REST API from the previous python
+version; For example:
+
+- The `&cway=...` parameter has been renamed to `&cwy=...` in this version.
+- Only `MultiLineString` features are returned; this means that `&slk_from`
+  should not be equal to `&slk_to` for valid results.
+- etc... please read the new documentation below carefully.
+
+I plan to abandon the python version and maintain this rust version in the
+future. This is because
+
+| Issue        | Python                                                                                                                                                                                                                   | Rust                                                                                                                                                                                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Speed        | Slow. 5 minutes + to georeference 12000 items.                                                                                                                                                                           | **Super fast**. The network connection is the bottleneck. Less than 30 seconds to georeference 12000 rows when used one row at a time, effectively instantaneous in `/batch/` mode.                                                                                                                                                                               |
+| RAM          | Over 700Mb                                                                                                                                                                                                               | 70Mb (180Mb peek)                                                                                                                                                                                                                                                                                                                                                 |
+| Startup time | Very slow.                                                                                                                                                                                                               | Also a bit slow (due to reading the input data and decompressing it in memory on every startup) but still much faster than the python version.                                                                                                                                                                                                                    |
+| Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform, It produces a single statically linked binary which is very easy to distribute. Due to the magic of Cargo and the rust toolchain, it is incredibly easy to clone from github and compile without complicated setup. The only complication I have experienced on Debian was the need to manually install libssl-dev. |
+| Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar.                                    |
