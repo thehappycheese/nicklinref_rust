@@ -16,9 +16,10 @@ pub struct Settings {
 }
 
 impl Settings {
+
 	pub fn default() -> Settings {
 		Settings {
-			NLR_ADDR:Ipv4Addr::new(0,0,0,0),
+			NLR_ADDR:Ipv4Addr::new(127,0,0,1),
 			NLR_PORT:8080,
 			NLR_DATA_FILE:"./data/data.json.lz4".to_string(),
 			NLR_DATA_SOURCE_URL:"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json".to_string(),
@@ -30,6 +31,7 @@ impl Settings {
 
 	pub fn get() -> Result<Self, Box<dyn std::error::Error>> {
 		let mut settings: Settings = match env::args().skip_while(|item| item != "--config").nth(1){
+			// TODO: check this works with spaces and quotes etc
 			Some(path) => {
 				println!("Found config file based on --config command line argument: {}", path);
 				match fs::File::open(&path) {

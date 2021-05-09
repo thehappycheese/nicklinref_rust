@@ -68,7 +68,7 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 	Ok(document_to_save)
 }
 
-pub async fn load_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
+pub fn load_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
 	println!("Loading data from file.");
 	let file_in_json = File::open(Path::new(&s.NLR_DATA_FILE))?;
 	let decomp = lz_fear::framed::decompress_frame(file_in_json)?;

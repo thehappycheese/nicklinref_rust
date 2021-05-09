@@ -26,9 +26,9 @@ use basic_error::BasicErrorWarp;
 /// Moves a clone of an Arc<T> into a warp filter chain.
 /// The closure here takes ownership of the first clone, and provides yet another clone of the arc whenever it is called.
 /// I think this lets the first Arc clone live as long as the filter
-/// but I spent HOURS trying to move a reference to data and data_index
-/// into the filter closures with no success. This is the only way that works,
-/// I can only assume this is idiomatic rust. Idiotic more like.
+/// I spent HOURS trying to move a reference to data and data_index
+/// directly from main into the .and_then() filter closures with no success.
+/// This is the only way i have found that works, therefore I can only assume this is idiomatic warp/rust.
 fn clone_arc<T>(something:T) -> impl warp::Filter<Extract=(T,), Error=Infallible> + Clone
 where T:Send+Sync+Clone{
 	warp::any().map(move || something.clone())
@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}.into();
 
 
-	let data:Arc<LayerSaved> = match load_data(&settings).await {
+	let data:Arc<LayerSaved> = match load_data(&settings) {
 		Ok(res) => res,
 		Err(e) => {
 			// TODO: add user input confirmation?
