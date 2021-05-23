@@ -84,12 +84,6 @@ impl IntoIterator for &RequestedCwy{
 		}
 	}
 }
-// impl Iterator for &RequestedCwy{
-// 	type Item = Cwy;
-// 	fn next(self)->Option<Item>{
-// 		&self.into_iter()
-// 	}
-// }
 
 impl PartialEq<Cwy> for RequestedCwy {
 	fn eq(&self, other: &Cwy) -> bool {

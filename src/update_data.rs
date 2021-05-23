@@ -11,7 +11,7 @@ use reqwest;
 use serde_json;
 
 use crate::basic_error::BasicError;
-use crate::config_loader::Settings;
+use crate::settings::Settings;
 use crate::esri_serde::{Cwy, LayerDownloadChunk, LayerSaved, LayerSavedFeature};
 
 

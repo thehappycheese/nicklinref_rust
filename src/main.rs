@@ -1,4 +1,4 @@
-mod config_loader;
+mod settings;
 mod update_data;
 mod esri_serde;
 mod basic_error;
@@ -11,7 +11,7 @@ use std::convert::Infallible;
 
 use warp::Filter;
 use bytes;
-use config_loader::Settings;
+use settings::Settings;
 
 use nickslinetoolsrust::linestring::{LineStringy, LineStringMeasured};
 use unit_conversion::convert_metres_to_degrees;
@@ -24,7 +24,8 @@ use basic_error::BasicErrorWarp;
 
 
 /// Moves a clone of an Arc<T> into a warp filter chain.
-/// The closure here takes ownership of the first clone, and provides yet another clone of the arc whenever it is called.
+/// The closure here takes ownership of the first clone, 
+/// and provides yet another clone of the arc whenever it is called.
 /// I think this lets the first Arc clone live as long as the filter
 /// I spent HOURS trying to move a reference to data and data_index
 /// directly from main into the .and_then() filter closures with no success.
@@ -41,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let settings:Arc<Settings> = match Settings::get(){
 		Ok(settings)=>settings,
 		Err(e)=>{
-			println!("Unable to load settings from environment variables or from any .json file specified with the --config command line option:  {}", e);
+			println!("Unable to load configuration from environment variables or from any .json file specified with the --config command line option:  {}", e);
 			return Err(e);
 		}
 	}.into();
@@ -50,7 +51,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let data:Arc<LayerSaved> = match load_data(&settings) {
 		Ok(res) => res,
 		Err(e) => {
-			// TODO: add user input confirmation?
 			println!("Failed to load from cache due to error {}. Will try re-download.", e);
 			update_data(&settings).await?
 		}
