@@ -1,7 +1,7 @@
 ```mermaid
 
 flowchart TD
-    A(start) -->B1a
+    A(start) --> B1a
     subgraph Load Settings
         B1a["Console argument is present?<br>( --config #quot;./somepath/config.json#quot; )"]
 
@@ -31,12 +31,12 @@ flowchart TD
 
 		H-->|Error| P4["panic!()"]
 		
-		H[(Build<br>Index)]
+		H[Build<br>Index] --> II[(Index)]
 
     end
 	subgraph Server
 		D-->Q
-		H-->Q
+		II-->Q
 		Q[Open server at NLR_ADDR:NLR_PORT]
 		Q-->|Error| P5
 		P5["panic!()"]
