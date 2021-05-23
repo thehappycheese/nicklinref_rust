@@ -4,7 +4,5 @@
 	"NLR_PORT":8080,
 	"NLR_DATA_FILE":"./data/data.json.lz4",
 	"NLR_DATA_SOURCE_URL":"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
-	"NLR_STATIC_HTTP":"./__static_http",
-	"NLR_CERT_PATH":"./certs/public.crt",
-	"NLR_PRIVATE_KEY_PATH":"./certs/decrypted_private.key"
+	"NLR_STATIC_HTTP":"./__static_http"
 }

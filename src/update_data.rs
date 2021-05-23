@@ -151,7 +151,7 @@ pub fn perform_analysis(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std
 		),
 		None => {
 			return Err(Box::new(BasicError::new(
-				"Zero features recieved by perform_analysis()",
+				"Zero features received by perform_analysis()",
 			)))
 		}
 	};
@@ -166,7 +166,7 @@ pub fn perform_analysis(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std
 		let current_feature_is_new_road = previous_road != &feature.attributes.ROAD;
 		let current_feature_is_different_cwy = previous_cwy != &feature.attributes.CWY;
 		if current_feature_is_new_road || current_feature_is_different_cwy {
-			// the into() function on the next line is doing magic that i dont quite understand. Maybe its better than my previous solution which was .clone() ?
+			// the into() function on the next line is doing magic that I don't quite understand. Maybe its better than my previous solution which was .clone() ?
 			match map_from_road_number.entry(previous_road.into()) {
 				Entry::Vacant(e) => {
 					e.insert(RoadDataByCwy::new_from_cwy(
@@ -212,7 +212,7 @@ pub fn perform_analysis(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std
 	// }
 	// for key in map_from_first_letter[&'H'].keys(){
 	// 	let item = &map_from_first_letter[&'H'][key];
-	// 	println!("Key exists on 'H': \"{}\" haveing the following number of features in L:{} R:{} S:{}", key,
+	// 	println!("Key exists on 'H': \"{}\" having the following number of features in L:{} R:{} S:{}", key,
 	// 	match item.Left {
 	// 		Some(v)=>v.1-v.0,
 	// 		None=>0

@@ -5,7 +5,7 @@
 
 - [1. Introduction](#1-introduction)
 	- [1.1. Purpose](#11-purpose)
-	- [1.2. Doesn't this already exist? (No)](#12-doesnt-this-already-exist-no)
+	- [1.2. Doesn't this already exist?](#12-doesnt-this-already-exist)
 	- [1.3. But What For? (PowerBI Visuals)](#13-but-what-for-powerbi-visuals)
 		- [1.3.1. 1.3.1 Icon Map](#131-131-icon-map)
 		- [1.3.2. 1.3.2 NickMap (My Custom Visual)](#132-132-nickmap-my-custom-visual)
@@ -17,8 +17,7 @@
 	- [2.4. Usage - Configuration](#24-usage---configuration)
 	- [2.5. Usage - Data Download and Refresh](#25-usage---data-download-and-refresh)
 	- [2.6. Usage - Coordinate Reference System (CRS)](#26-usage---coordinate-reference-system-crs)
-- [3. Docker](#3-docker)
-- [4. Bugs, Issues, Future Features](#4-bugs-issues-future-features)
+- [4. Roadmap / Future Features](#4-roadmap--future-features)
 - [5. Comparison with previous python version](#5-comparison-with-previous-python-version)
 
 ## 1. Introduction
@@ -28,27 +27,49 @@
 This application is a REST service that can slice portions of the Western
 Australia road network geometry and return either `GeoJSON` or `WKT` features.
 
-To use it, you need to compile and run it, then visit / fetch data from the
-server URL (eg `https://localhost:8080/query/?...`), with the URL parameters
-`?road=...&slk_from=...&slk_to=...`. Optionally, the parameters `&cwy=...` and
-`&offset=...` can be used to select a specific carriageway, and/or offset the
-resulting geometry. Use the `&f=...` parameter to select WKT or GeoJSON output
-(See usage section below).
+Once it has been compiled, run `nicklinref.exe` then visit
+<http://localhost:8080/query/?road=H001&slk_from=1.5&slk_to=3> to test if it is
+working.
 
-### 1.2. Doesn't this already exist? (No)
+The required URL parameters are `road`, `slk_from`, and `slk_to`. Optionally,
+the parameters `cwy` and `offset` can be used to select one or more
+carriageway(s), and/or offset the resulting geometry. The `&f=WKT` can be added
+to get WKT instead of the default GeoJSON output.
 
-This REST service will properly truncate the geometry at the requested
-`slk_from` and `slk_to` endpoints. This is different from the from the REST
-services already available at <http://data.wa.gov.au> which can only filter
-records that intersect the requested range according to the row structure of the
-underlying storage table.
+### 1.2. Doesn't this already exist?
+
+This software is different from the from the REST services already available at
+<https://data.wa.gov.au> because it properly truncates the geometry at the
+requested `slk_from` and `slk_to` endpoints. The REST services available at
+<https://data.wa.gov.au> can only filter records that intersect the requested range
+according to the row structure of the underlying storage table.
 
 Each row (in the database storing the Road Network) has a fixed `START_SLK` and
-`END_SLK`, contains the road geometry for that section. Each row typically
-represents a section of road from one intersection to the next. The REST
-services at <http://data.wa.gov.au> can only return whole rows, and are not able
+`END_SLK`, and contains the road geometry for that section. Each row typically
+represents a section of road from one intersection to the next intersection. The REST
+services at <https://data.wa.gov.au> can only return whole rows, and are not able
 to return only a portion of the road geometry if the requested range partly
 intersects with a row's SLK range.
+
+An ArcMap geoprocessing model could be used as an alternative to this software.
+To achieve the same result it ends up being a pretty complicated model involving
+several calls to `CreateRoutes_lr` and `MakeRouteEventLayer_lr` functions with a
+heap of filters, joins and projections. Never the less, this model could be
+published as a 'Geoprocessing Service' with very similar features to this REST
+service. There are a few reasons I think this software may perform better
+anyway, or be more convenient:
+
+- this rust implementation will probably be faster, especially in row-by-row
+  mode.
+- this rust version may use less cpu, ram and storage on the server
+- an arcgis based service may only support a batch mode, requiring CSV input.
+  This would not be useable with Excels `=WEBSERVICE()` formula, and much more
+  difficult to use with PowerBI's `=Web.Contents()` function.
+- the arcgis service may not support GeoJSON or WKT. Only EsriJSON seems to work
+  reliably.
+- this rust version will use less bandwidth in batch mode due to the binary
+  input format. This is much more suitable for interfacing directly with PowerBI
+  visuals.
 
 ### 1.3. But What For? (PowerBI Visuals)
 
@@ -59,9 +80,9 @@ used to visualise the data in Power BI.
 
 #### 1.3.1. 1.3.1 Icon Map
 
-IconMap can be used with any table of data containing a column consisting of WKT.
-<https://icon-map.com/>
-IconMap is an excellent visual which is finished and polished and is easy to download and use.
+IconMap can be used with any table of data containing a column consisting of
+WKT. <https://icon-map.com/> IconMap is an excellent visual which is finished
+and polished and is easy to download and use.
 
 #### 1.3.2. 1.3.2 NickMap (My Custom Visual)
 
@@ -129,10 +150,16 @@ from Power BI using the `=Web.Contents()` function.
 `/batch/` mode is an advanced feature that allows ultra-fast georeferecing with minimal network traffic.
 This mode exists to integrate with PowerBI custom visuals.
 
-This mode expects a `POST` request to <http://localhost:8025/batch/> by default.
+This mode expects a `POST` request to <http://localhost:8080/batch/> by default. See details below.
+
+<details>
+<summary>Click to expand details of `/batch/` Mode</summary>
+
 The body of the request must be binary data consisting of a series of frames
-with the format shown in the table below. Any number of frames can be packed
+with the format shown below. Any number of frames can be packed
 into a single request.
+
+Frame format:
 
 | Byte Length | Type                  | Value                                  |
 | ----------- | --------------------- | -------------------------------------- |
@@ -143,7 +170,8 @@ into a single request.
 | 4           | Float32 Little Endian | `offset` in metres                     |
 | 1           | Uint8                 | `cwy` (carriageways) (see table below) |
 
-`cwy` is packed into a Uint8 as follows:
+Value of `cwy`:
+
 | `cwy` | Carriageway    | Binary          | Decimal |
 | ----- | -------------- | --------------- | ------- |
 | `R`   | Right only     | `0b0000_0001`   | 1       |
@@ -153,10 +181,6 @@ into a single request.
 | `LR`  | Left & Right   | `0b0000_0101`   | 5       |
 | `LS`  | Left & Single  | `0b0000_0110`   | 6       |
 | `LRS` | All            | any other value |         |
-
-Th `/batch/` mode is impossible to use from Excel, and would require a very
-complex PowerBI M script to work. It is intended to be used by other software
-(eg. The custom PowerBI visual linked above).
 
 There is an example batch query implementation in `__static_http/main.js`
 however a simplified version is shown below:
@@ -252,6 +276,9 @@ The output of the script above is shown below:
 }
 ```
 
+</details>
+
+
 ### 2.4. Usage - Configuration
 
 To load configuration, the application will take the following steps:
@@ -266,38 +293,26 @@ nicklinref.exe --config ./config.json
 
 ```json
 {
-	"NLR_ADDR":"0.0.0.0",
+	"NLR_ADDR":"127.0.0.1",
 	"NLR_PORT":8080,
 	"NLR_DATA_FILE":"./data/data.json.lz4",
 	"NLR_DATA_SOURCE_URL":"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
 	"NLR_STATIC_HTTP":"./__static_http",
-	"NLR_CERT_PATH":"./certs/public.crt",
-	"NLR_PRIVATE_KEY_PATH":"./certs/decrypted_private.key"
 }
 ```
 
-3. Override any options with any available environment variables with matching names.
+3. Finally, environment variables with matching names will be used to overwrite any options loaded so far.
+   - If there is an error while processing an environment variable, the previously loaded option will be used instead. (Note: This may be changed to a fatal error in the future.)
 
 The following table describes the configuration options in more detail:
 
-| Property               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NLR_ADDR`             | A string containing an IPV4 address. 0.0.0.0 will allow requests from anywhere. Using 127.0.0.1 wil limit traffic to your own machine for testing purposes.                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `NLR_PORT`             | A port number.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `NLR_DATA_FILE`        | The filename of the data cached from `NLR_DATA_SOURCE_URL`. **The directory must already exist**. If the file does not already exist then it will be created and fresh data will be downloaded.                                                                                                                                                                                                                                                                                                                                                                                    |
-| `NLR_DATA_SOURCE_URL`  | This is the ArcGIS REST service where the road network is downloaded from. It is assumed that multiple requests are needed and the `&resultOffset=...` parameter is used to repeatedly fetch more data. Only certain fields are fetched `outFields=ROAD,START_SLK,END_SLK,CWY` and the output spatial reference is specified `&outSR=4326`. ESRI's own json format (`&f=json`) is expected because `&f=geojson` does not seem to work properly. Also note that currently the field names `ROAD`, `START_SLK`, `END_SLK`, `CWY` are hard-coded and must exist on the incoming data. |
-| `NLR_STATIC_HTTP`      | Used by the `/show/` feature to display an interactive map. the directory specified by this config option should exist or I think the application will crash on startup. The directory can probably be empty though if it is not required. The `__static_http` folder in this repo contains the files required.                                                                                                                                                                                                                                                                    |
-| `NLR_CERT_PATH`        | A certificate (public key) Used to serve HTTPS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `NLR_PRIVATE_KEY_PATH` | A unencrypted private key used to serve HTTPS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-
-> Note:
->
-> For testing purposes A suitable self signed certificate and key can be
-> generated like this:
->
-> `openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=AU/ST=SomeState/L=SomeTown/O=You/CN=localhost" -keyout decrypted_private.key -out public.crt`
->
-> This will cause a nasty security notice when accessed via the browser.
+| Property              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NLR_ADDR`            | A string containing an IPV4 or IPV6 address. Using 127.0.0.1 will limit traffic to your own machine for testing purposes. 0.0.0.0 will allow requests from anywhere on the local network.                                                                                                                                                                                                                                                                                                                                                                                          |
+| `NLR_PORT`            | A port number.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `NLR_DATA_FILE`       | The filename of the data cached from `NLR_DATA_SOURCE_URL`. **The directory must already exist**. If the file does not already exist then it will be created and fresh data will be downloaded.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `NLR_DATA_SOURCE_URL` | This is the ArcGIS REST service where the road network is downloaded from. It is assumed that multiple requests are needed and the `&resultOffset=...` parameter is used to repeatedly fetch more data. Only certain fields are fetched `outFields=ROAD,START_SLK,END_SLK,CWY` and the output spatial reference is specified `&outSR=4326`. ESRI's own json format (`&f=json`) is expected because `&f=geojson` does not seem to work properly. Also note that currently the field names `ROAD`, `START_SLK`, `END_SLK`, `CWY` are hard-coded and must exist on the incoming data. |
+| `NLR_STATIC_HTTP`     | Used by the `/show/` feature to display an interactive map. The directory specified by this config option should exist or I think the application may crash on startup. The directory can probably be empty though if it is not required. The `__static_http` folder in this repo contains the files required.                                                                                                                                                                                                                                                                     |
 
 ### 2.5. Usage - Data Download and Refresh
 
@@ -305,66 +320,48 @@ To refresh your data, simply manually delete the file specified by the
 `NLR_DATA_FILE` option and restart the application. Fresh data will be
 downloaded.
 
+> Note: This software will not create or delete directories. Please make sure the target directory specified by `NLR_DATA_FILE` exists. 
+
 ### 2.6. Usage - Coordinate Reference System (CRS)
 
-The default CRS is EPSG:4326 which is also called WGS84 for eldritch reasons
-beyond mortal comprehension (see <https://spatialreference.org/ref/epsg/wgs-84/>)
+The coordinate system of the returned geometry depends on the coordinate system
+downloaded from `NLR_DATA_SOURCE_URL`.
 
-This software would almost work with any reference system except for the fact
-that it needs to convert `&offset=[metres]` into degrees. It uses a simple
-approximation for this which will not work if the CRS is changed.
+However, this software will only work correctly with EPSG:4326 (which is also
+called WGS84 for eldritch reasons beyond mortal comprehension. See
+<https://spatialreference.org/ref/epsg/wgs-84/>) This is because the
+`&offset=...` parameter will only work correctly if the source uses a spherical
+coordinate system (degrees). The software uses a rough approximation to convert
+from meters to degrees assuming that there are `111320` metres per degree.
 
-It is therefore important that the input data is loaded in EPSG:4326. I believe
-the `&outSR=4326` parameter in the following URL accomplishes this.
+## 4. Roadmap / Future Features
 
-## 3. Docker
-
-You can build a version using the dockerfile that I put here:
-<https://github.com/thehappycheese/nicklinref_rust/wiki/Dockerfile>
-
-> **Note:**
->
-> Currently the dockerfile generates a self-signed certificate
-> as part of the build to enable HTTPS.
->
-> This is for testing purposes only and causes a warning when
-> visiting the `/query/` or `/show/` page in the browser.
->
-> The `/batch/` function cannot be used by the PowerBI custom visual
-> i am working on unless the user manually adds the certificates 
-> to their own trusted root certificate store.
-
-## 4. Bugs, Issues, Future Features
-
-- The current version serves all traffic over HTTPS. However, only the `/batch/` mode used by my custom PowerBI visual requires this HTTPS. I could potentially serve them separately if that helps.
-- I have discovered `FastCGI`; this is the exact description of what I need.
-- Prevent crash when missing `static_dir`
-- Allow multiple features to be requested in `/query/` mode using the POST
-  method with a json request body
-- Allow requests where `slk_from` == `slk_to`, return `Point` and / or
-  `MultiPoint` features in this case.
-  - And / or, create a new path `/query_points/` which expects point requests only
+- Add a `/point/` mode where only a single SLK is to be provided.
+- modify `/show/` mode to accept all query types... maybe by extending the path specification like this `/show/query/`, `/show/batch/` etc
+- With `/query/` mode
+  - define behaviour when a reversed interval is provided (`slk_to < slk_from`).
+  - define behaviour when a zero length interval is provided (`slk_from == slk_to`).
+  - consider renaming `/query/` mode to `/interval/`
+  - Consider allowing multiple features to be requested at once by one or more of the following methods
+    - sending json with POST mode, or
+    - sending json in GET mode, or
+    - allowing multiple values per parameter `&road=H001,H002`
+- modify `/batch/` mode to accept both interval and point queries
 
 ## 5. Comparison with previous python version
 
-This is a rust implementation of my previous project written in python:
+This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>
 
-Note there are some differences in the REST API from the previous python
-version; For example:
-
-- The `&cway=...` parameter has been renamed to `&cwy=...` in this version.
-- Only `MultiLineString` features are returned; this means that `&slk_from`
-  should not be equal to `&slk_to` for valid results.
-- etc... please read the new documentation below carefully.
+>Note: This version uses an incompatible REST API.
 
 I plan to abandon the python version and maintain this rust version in the
-future. This is because
+future. Reasons below:
 
-| Issue        | Python                                                                                                                                                                                                                   | Rust                                                                                                                                                                                                                                                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Speed        | Slow. 5 minutes + to georeference 12000 items.                                                                                                                                                                           | **Super fast**. The network connection is the bottleneck. Less than 30 seconds to georeference 12000 rows when used one row at a time, effectively instantaneous in `/batch/` mode.                                                                                                                                                                               |
-| RAM          | Over 700Mb                                                                                                                                                                                                               | 70Mb (180Mb peek)                                                                                                                                                                                                                                                                                                                                                 |
-| Startup time | Very slow.                                                                                                                                                                                                               | Also a bit slow (due to reading the input data and decompressing it in memory on every startup) but still much faster than the python version.                                                                                                                                                                                                                    |
-| Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform, It produces a single statically linked binary which is very easy to distribute. Due to the magic of Cargo and the rust toolchain, it is incredibly easy to clone from github and compile without complicated setup. The only complication I have experienced on Debian was the need to manually install libssl-dev. |
-| Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar.                                    |
+| Issue        | Python                                                                                                                                                                                                                   | Rust                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Speed        | Slow. 5 minutes + to georeference 12000 items.                                                                                                                                                                           | **Super fast**. The network connection is the bottleneck. Less than 30 seconds to georeference 12000 rows when used one row at a time, effectively instantaneous in `/batch/` mode.                                                                                                                                                                                                                                            |
+| RAM          | Over 700Mb                                                                                                                                                                                                               | 70Mb (180Mb peek)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Startup time | Very slow.                                                                                                                                                                                                               | Also a bit slow (due to reading the input data and decompressing it in memory on every startup) but still much faster than the python version.                                                                                                                                                                                                                                                                                 |
+| Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform. On Debian you may need to run `apt-get install libssl-dev`. I've never had issues compiling on windows but I have only done that on one machine.                                                                                                                                                                                                                                 |
+| Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar. I don't know how to make containers that can go to sleep without unloading nicklinref from RAM. |

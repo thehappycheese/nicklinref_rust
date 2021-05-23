@@ -5,7 +5,7 @@ mod basic_error;
 mod decode_query_parameters;
 mod unit_conversion;
 
-use std::{convert::TryFrom, net::IpAddr, str};
+use std::{convert::TryFrom, str};
 use std::sync::Arc;
 use std::convert::Infallible;
 
@@ -18,7 +18,6 @@ use unit_conversion::convert_metres_to_degrees;
 use update_data::{update_data, load_data, perform_analysis, LookupMap, RoadDataByCwy};
 use decode_query_parameters::{QueryParameters, OutputFormat, QueryParameterBatch};
 use esri_serde::{LayerSaved};
-use std::net::{SocketAddr};
 use basic_error::BasicErrorWarp;
 
 
@@ -73,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()))
 		.and_then(|query:QueryParameters, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
-			match get_stuff(&query,&data,&data_index){
+			match get_stuff(&query, &data, &data_index){
 				Ok(s)=>Ok(s),
 				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
 			}
@@ -100,10 +99,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 				})
 				.collect::<Vec<String>>()
 				.join(",");
+			
 			if false{
-				return Err(warp::reject::custom(BasicErrorWarp::new("to make the typechecker happy")))
+			 	return Err(warp::reject::custom(BasicErrorWarp::new("to make the typechecker happy")))
 			}
-			Ok("[".to_string() + &f + "]")
+
+			Ok(
+				"[".to_string() + &f + "]"
+			)
 		});
 
 	
@@ -127,15 +130,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		// TODO: we can probably limit this to the PowerBI visual, rather than allow_any_origin.
 		//  I don't know how PowerBI desktop would like that...?
 
-	let address:SocketAddr = SocketAddr::new(IpAddr::V4(settings.NLR_ADDR), settings.NLR_PORT);
+
+	let address = settings.get_socket_address();
+	
 	println!("Serving at {:?}", address);
+	
 	warp::serve(
 		filter
-	)
-	.tls()
-	.cert_path(&settings.NLR_CERT_PATH)
-	.key_path(&settings.NLR_PRIVATE_KEY_PATH)
-	.run(address).await;
+	).run(address).await;
 	
 	Ok(())
 }

@@ -24,7 +24,7 @@ impl<'de> Deserialize<'de> for OutputFormat {
 			type Value = OutputFormat;
 			// Format a message stating what data this Visitor expects to receive.
 			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-				formatter.write_str("expects to recive any of the following values l, r, s, lr, ls, rs, lrs (or any capitalisation thereof)")
+				formatter.write_str("expects to receive any of the following values l, r, s, lr, ls, rs, lrs (or any capitalisation thereof)")
 			}
 			fn visit_borrowed_str<E>(self, s: &'de str) -> Result<Self::Value, E>
 			where
@@ -109,7 +109,7 @@ impl<'de> Deserialize<'de> for RequestedCwy {
 			type Value = RequestedCwy;
 			// Format a message stating what data this Visitor expects to receive.
 			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-				formatter.write_str("expects to recive any of the following values l, r, s, lr, ls, rs, lrs (or any capitalisation thereof)")
+				formatter.write_str("expects to receive any of the following values l, r, s, lr, ls, rs, lrs (or any capitalisation thereof)")
 			}
 			fn visit_borrowed_str<E>(self, s: &'de str) -> Result<Self::Value, E>
 			where
