@@ -575,8 +575,8 @@ dependencies = [
 
 [[package]]
 name = "nickslinetoolsrust"
-version = "0.1.1"
-source = "git+https://github.com/thehappycheese/nicks_line_tools_rust.git?branch=main#4f61110eb66f7f52c1fc5bb73e51f09463ce46e8"
+version = "1.0.1"
+source = "git+https://github.com/thehappycheese/nicks_line_tools_rust.git?tag=v1.0.1#0afc2613fa92da9c11a0cd4b64a4e0a242b27f68"
 dependencies = [
  "serde",
 ]

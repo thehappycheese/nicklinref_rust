@@ -6,7 +6,7 @@ mod query_parameters;
 mod unit_conversion;
 mod geoprocessing;
 
-use std::{convert::TryFrom, str};
+use std::{convert::TryFrom};
 use std::sync::Arc;
 use std::convert::Infallible;
 
@@ -14,13 +14,14 @@ use warp::Filter;
 use bytes;
 use settings::Settings;
 
-use nickslinetoolsrust::linestring::{LineStringy, LineStringMeasured};
-use unit_conversion::convert_metres_to_degrees;
-use update_data::{update_data, load_data, perform_analysis, LookupMap, RoadDataByCwy};
-use query_parameters::{QueryParametersLine, OutputFormat, QueryParameterBatch};
+
+use update_data::{update_data, load_data, perform_analysis, LookupMap};
+use query_parameters::{ QueryParameterBatch};
 use geoprocessing::{get_linestring, get_points};
 use esri_serde::{LayerSaved};
 use basic_error::BasicErrorWarp;
+
+use crate::query_parameters::{QueryParametersLine, QueryParametersPoint};
 
 
 
@@ -69,12 +70,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let route_line = 
 		warp::get()
-		.and(warp::path("line"))
+		.and(warp::path("lines"))
 		.and(warp::query())
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()))
 		.and_then(|query:QueryParametersLine, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
 			match get_linestring(&query, &data, &data_index){
+				Ok(s)=>Ok(s),
+				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+			}
+		});
+	
+	let route_points = 
+		warp::get()
+		.and(warp::path("points"))
+		.and(warp::query())
+		.and(clone_arc(data.clone()))
+		.and(clone_arc(data_index.clone()))
+		.and_then(|query:QueryParametersPoint, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
+			match get_points(&query, &data, &data_index){
 				Ok(s)=>Ok(s),
 				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
 			}
@@ -119,6 +133,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let filter = 
 		route_show
 		.or(route_line)
+		.or(route_points)
 		.or(route_batch)
 		.with(
 			warp::cors()

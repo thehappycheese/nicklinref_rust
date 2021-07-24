@@ -7,6 +7,7 @@ pub enum OutputFormat {
 	GEOJSON,
 	WKT,
 	JSON,
+	LATLON
 }
 
 impl<'de> Deserialize<'de> for OutputFormat {
@@ -30,6 +31,7 @@ impl<'de> Deserialize<'de> for OutputFormat {
 					"GEOJSON" => OutputFormat::GEOJSON,
 					"WKT" => OutputFormat::WKT,
 					"JSON" => OutputFormat::JSON,
+					"LATLON" => OutputFormat::LATLON,
 					_ => OutputFormat::GEOJSON,
 				})
 			}
