@@ -108,7 +108,7 @@ async function add_features(url_params, fetch_pool = undefined) {
 
 	url_params.delete("f");// geojson is default
 
-	let url_to_fetch = "/query/?" + url_params.toString();
+	let url_to_fetch = "/lines/?" + url_params.toString();
 
 	let fetcher;
 
@@ -297,7 +297,6 @@ function fetch_batch() {
 		)
 	});
 	Promise.all(fetches).then(()=>{
-		debugger
 		zoom_to_loaded_features()
 
 	});
