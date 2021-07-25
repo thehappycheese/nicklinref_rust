@@ -68,32 +68,62 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	println!("Indexing complete.");
 
 
-	let route_line = 
+	// let route_line = 
+	// 	warp::get()
+	// 	.and(warp::path("lines"))
+	// 	.and(warp::query())
+	// 	.and(clone_arc(data.clone()))
+	// 	.and(clone_arc(data_index.clone()))
+	// 	.and_then(|query:QueryParametersLine, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
+	// 		match get_linestring(&query, &data, &data_index){
+	// 			Ok(s)=>Ok(s),
+	// 			Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+	// 		}
+	// 	});
+	
+	// let route_points = 
+	// 	warp::get()
+	// 	.and(warp::path("points"))
+	// 	.and(warp::query())
+	// 	.and(clone_arc(data.clone()))
+	// 	.and(clone_arc(data_index.clone()))
+	// 	.and_then(|query:QueryParametersPoint, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
+	// 		match get_points(&query, &data, &data_index){
+	// 			Ok(s)=>Ok(s),
+	// 			Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+	// 		}
+	// 	});
+
+	let no_path = 
 		warp::get()
-		.and(warp::path("lines"))
-		.and(warp::query())
+		//.and(warp::path::end())
 		.and(clone_arc(data.clone()))
-		.and(clone_arc(data_index.clone()))
-		.and_then(|query:QueryParametersLine, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
+		.and(clone_arc(data_index.clone()));
+
+	let no_path_lines = 
+		no_path.clone()
+		.and(warp::query())
+		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| async move{
 			match get_linestring(&query, &data, &data_index){
 				Ok(s)=>Ok(s),
 				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
 			}
 		});
-	
-	let route_points = 
-		warp::get()
-		.and(warp::path("points"))
+
+	let no_path_points = 
+		no_path
 		.and(warp::query())
-		.and(clone_arc(data.clone()))
-		.and(clone_arc(data_index.clone()))
-		.and_then(|query:QueryParametersPoint, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
+		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| async move{
 			match get_points(&query, &data, &data_index){
 				Ok(s)=>Ok(s),
 				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
 			}
 		});
 	
+	let route_show = 
+		warp::path("show")
+		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
+
 	
 	let route_batch = 
 		warp::post()
@@ -126,14 +156,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		});
 
 	
-	let route_show = 
-		warp::path("show")
-		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
-
+	
 	let filter = 
 		route_show
-		.or(route_line)
-		.or(route_points)
+		.or(no_path_lines)
+		.or(no_path_points)
 		.or(route_batch)
 		.with(
 			warp::cors()

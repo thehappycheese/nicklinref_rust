@@ -10,9 +10,10 @@
 		- [1.3.1. Icon Map](#131-icon-map)
 		- [1.3.2. NickMap (My Custom Visual)](#132-nickmap-my-custom-visual)
 - [2. Usage](#2-usage)
-	- [2.1. Usage - `/lines/` Mode](#21-usage---lines-mode)
-		- [2.1.1. Example `/lines/`](#211-example-lines)
-	- [Usage - `/points/` Mode](#usage---points-mode)
+	- [2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#21-normal-usage---text-response-geojson--wkt--json--latlon)
+		- [2.1.1. Example - Get a MultiLineString in WKT](#211-example---get-a-multilinestring-in-wkt)
+		- [2.1.2. Example - Get a MultiPoint in GeoJSON](#212-example---get-a-multipoint-in-geojson)
+		- [2.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)](#213-example---get-a-single-comma-separated-latitude-longitude-pair-flatlon)
 	- [2.2. Usage - `/show/` Mode](#22-usage---show-mode)
 	- [2.3. Usage - `/batch/` Mode](#23-usage---batch-mode)
 	- [2.4. Usage - Configuration](#24-usage---configuration)
@@ -29,7 +30,7 @@ This application is a REST service that can slice portions of the Western
 Australia road network geometry and return either `GeoJSON` or `WKT` features.
 
 Once it has been compiled, run `nicklinref.exe` then visit
-<http://localhost:8080/lines/?road=H001&slk_from=1.5&slk_to=3> to test if it is
+<http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> to test if it is
 working.
 
 The required URL parameters are `road`, `slk_from`, and `slk_to`. Optionally,
@@ -101,44 +102,83 @@ If everything goes to plan, this visual might be better than IconMap:
 
 ![Live Georeferencing field wells](./readme_extras/live_georeferencing.jpg)
 
-
 ## 2. Usage
 
-### 2.1. Usage - `/lines/` Mode
+### 2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)
 
-By default query mode can be accessed at the following address:
+When the rest service is running locally (on your own machine) it can be accessed at the following address by default:
 
-<http://localhost:8025/lines/?>...
+<http://localhost:8080/?>...
 
-The parameters are summarised in the table below:
-| Name       | Description                                                                                                                                                                                             | Example Value               | Optional | Default   |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------- | --------- |
-| `road`     | Main Roads Road Number or Local Government Road Number (case sensitive)                                                                                                                                 | `road=H001`                 | No       | -         |
-| `slk_from` | Straight Line Kilometre to start the segment                                                                                                                                                            | `slk_from=1.55`             | No       | -         |
-| `slk_to`   | Straight Line Kilometre to end the segment                                                                                                                                                              | `slk_to=2.3`                | No       | -         |
-| `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                              | `cway=LS` or `cway=RS`      | Yes      | `LRS`     |
-| `offset`   | Number of meters to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right.   | `offset=4` or `offset=-3.5` | Yes      | `0`       |
-| `f`        | Desired response format. Must be `geojson`, `wkt` or `json` (not case sensitive). The `json` format is a nested array in the same format as the geojson `MultiLineString` `"coordinates":...` format.   | `f=geojson` or `f=wkt`      | Yes      | `geojson` |
+The  parameters are summarised in the table below:
 
-#### 2.1.1. Example `/lines/`
+| Name       | Description                                                                                                                                                                                           | Example Value               | Optional | Default   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------- | --------- |
+| `road`     | Main Roads Road Number or Local Government Road Number (case sensitive)                                                                                                                               | `road=H001`                 | No       | -         |
+| `slk_from` | Straight Line Kilometre to start the segment                                                                                                                                                          | `slk_from=1.55`             | No       | -         |
+| `slk_to`   | Straight Line Kilometre to end the segment                                                                                                                                                            | `slk_to=2.3`                | No       | -         |
+| `slk`      | Straight Line Kilometre to a point. (should not be combined with `slk_from` and `slk_to`, see notes below)                                                                                            | `slk=3`                     | No       | -         |
+| `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                            | `cway=LS` or `cway=RS`      | Yes      | `LRS`     |
+| `offset`   | Number of metres to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right. | `offset=4` or `offset=-3.5` | Yes      | `0`       |
+| `f`        | Desired response format. Must be `geojson`, `wkt`, `json` or `latlon`. (see notes below)                                                                                                              | `f=geojson`                 | Yes      | `geojson` |
+
+> **Note:**
+> 
+> 1. Parameters are case insensitive; `CWY=LS` should work the same as `cwy=ls`.
+> 1. If `slk_from` and `slk_to` are provided then
+>    - the `slk` parameter is ignored if present
+>    - A MultiLineString geometry is returned
+>    - even if only a single LineString is generated it still returns it as a
+>      MultiLineString geometry
+> 1. If the `slk` parameter is used then
+>    - MultiPoint geometry will be returned
+>    - even if only a single point is generated it still returns it as a MultiPoint geometry
+> 1. When `f=GeoJSON` responses are always wrapped in a `Feature`.
+> 1. The `f=json` format is a nested array in the same format as the geojson
+>    `MultiLineString` or `MultiPoint` `"coordinates":...` array format.
+> 1. The `f=latlon` format is special:
+>    - It will return a single comma separated latitude longitude pair
+>    - If multiple points would have been returned (left and right carriageway)
+>      then the average of these positions is returned
+
+
+#### 2.1.1. Example - Get a MultiLineString in WKT
 
 The following example fetches the Left and Single carriageway portions of Albany
 Highway from slk 1km to 2km and offsets them 10 metres to the left of the road.
 The result is returned in WKT format as a single `MULTILINESTRING` feature:
 
-<http://localhost:8025/lines/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt>
-
-The response looks like this:
+<http://localhost:8080/lines/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt> ⟶
 
 ```wkt
 MULTILINESTRING ((115.88771097361135 -31.967604589743765,115.88776331305647 -31.96753166223028,115.88782456479156 -31.967494045166685,115.88808285746482 -31.967581573012584,115.88842643824691 -31.967706811122067,115.88865106830647 -31.967794863020398,115.88878639134748 -31.967856418305686,115.88961385220324 -31.968270404421514),(115.88961222617614 -31.96826961114868,115.89009682355594 -31.968500014510138),(115.89009709103813 -31.968500142226866,115.8908060320806 -31.96884008302064,115.89130780129135 -31.96906658240955),(115.89129847166095 -31.9690630113479,115.8924861744535 -31.96944832848648),(115.89248599022535 -31.969448268938134,115.89367451654047 -31.969831024006037),(115.89367516412221 -31.96983123526756,115.89489443528633 -31.970234120891217),(115.89489484503049 -31.970234348879462,115.8952199535067 -31.97034351139344,115.89552559070945 -31.970457312501807,115.89572276324779 -31.97054445312055,115.89588899502093 -31.97062796284781,115.89603052161054 -31.9707213605839),(115.89603611706656 -31.97072540301373,115.8961699852627 -31.970830173406412,115.89636973106218 -31.970999046961516,115.89654509709025 -31.971164236270756,115.89708949236724 -31.971705035229636),(115.88735210575929 -31.967327078117492,115.88761740846113 -31.967472091243042),(115.88761495220085 -31.96747075121283,115.88782449298621 -31.967576711138406))
 ```
-### Usage - `/points/` Mode
 
-Point mode similar parameters to `/lines/` mode except
+#### 2.1.2. Example - Get a MultiPoint in GeoJSON
 
-- there is only a single `slk` parameter (instead of `slk_from` and `slk_to`), and
-- `f` can take the additional property `latlon` which returns a comma separated latitude longitude pair
+The following example fetches the a point for both the Left and right
+carriageway portions of Albany Highway at slk 2km. The format is not specified
+and therefore the result is returned in default GeoJSON as a`MultiPoint`
+feature:
+
+<http://localhost:8080/lines/?road=H001&slk=2> ⟶
+
+```json
+{"type":"Feature", "geometry":{"type":"MultiPoint", "coordinates":[[115.89702617983814,-31.97176876372234],[115.89692159880637,-31.97178473847775]]}}
+```
+
+#### 2.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)
+
+The following example fetches the a single pointon Albany Highway at slk 2km.
+Since there is no carriageway filter, it returns a position somewhere between
+the left and right carriageway. The format is not specified and therefore the
+result is returned in default GeoJSON as a`MultiPoint` feature:
+
+<http://localhost:8080/lines/?road=H001&slk=2> ⟶
+
+```json
+{"type":"Feature", "geometry":{"type":"MultiPoint", "coordinates":[[115.89702617983814,-31.97176876372234],[115.89692159880637,-31.97178473847775]]}}
+```
 
 ### 2.2. Usage - `/show/` Mode
 
@@ -146,9 +186,10 @@ Show mode works the same as `/lines/` mode except that instead of returning raw
 data, it displays an interactive map when viewed in the browser. This is useful
 to confirm that queries are working as intended.
 
-> TODO: `/show/` mode does not work with point queries. This is a planned feature.
+> TODO: `/show/` mode does not work with point queries. This is a planned
+> feature.
 
-<http://localhost:8025/show/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt>
+<http://localhost:8080/show/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt>
 ![show_demo.jpg](./readme_extras/show_demo.jpg)
 
 Query mode can easily be used from Excel with the `=WEBSERVICE()` formula, or
@@ -156,17 +197,19 @@ from Power BI using the `=Web.Contents()` function.
 
 ### 2.3. Usage - `/batch/` Mode
 
-`/batch/` mode is an advanced feature that allows ultra-fast georeferecing with minimal network traffic.
-This mode exists to integrate with PowerBI custom visuals.
+`/batch/` mode is an advanced feature that allows ultra-fast georeferecing with
+minimal network traffic. This mode exists to integrate with PowerBI custom
+visuals.
 
-This mode expects a `POST` request to <http://localhost:8080/batch/> by default. See details below.
+This mode expects a `POST` request to <http://localhost:8080/batch/> by default.
+See details below.
 
 <details>
 <summary>Click to expand details of `/batch/` Mode</summary>
 
 The body of the request must be binary data consisting of a series of frames
-with the format shown below. Any number of frames can be packed
-into a single request.
+with the format shown below. Any number of frames can be packed into a single
+request.
 
 Frame format:
 
@@ -197,8 +240,13 @@ however a simplified version is shown below:
 ```javascript
 // =========== Helper functions: ===========
 let CWY_LOOKUP = {
-    L: 0b0000_0100,	R: 0b0000_0001,	S: 0b0000_0010,	LR: 0b0000_0101,
-    LS: 0b0000_0110, RS: 0b0000_0011, LRS: 0b0000_0111
+    L: 0b0000_0100,
+	R: 0b0000_0001,
+	S: 0b0000_0010,
+	LR: 0b0000_0101,
+    LS: 0b0000_0110,
+	RS: 0b0000_0011,
+	LRS: 0b0000_0111
 }
 function binary_encode_request(road, slk_from, slk_to, offset, cwy) {
     let text_encoder = new TextEncoder();
@@ -244,7 +292,7 @@ request_body_parts.reduce((offset, byte_array) => {
 )
 
 // Send the request to the server
-fetch("http://localhost:8025/batch/", {
+fetch("http://localhost:8080/batch/", {
         method: "POST",
         body: request_body
     }
@@ -284,21 +332,21 @@ The output of the script above is shown below:
     ]
 }
 ```
-
 </details>
-
 
 ### 2.4. Usage - Configuration
 
 To load configuration, the application will take the following steps:
 
-1. Check to see if a config file has been specified on the command line using the `--config` option:
+1. Check to see if a config file has been specified on the command line using
+   the `--config` option:
 
 ```shell
 nicklinref.exe --config ./config.json
 ```
 
-2. If no `--config` was specified, then load the hard-coded default options. The defaults are shown below:
+2. If no `--config` was specified, then load the hard-coded default options. The
+   defaults are shown below:
 
 ```json
 {
@@ -310,8 +358,11 @@ nicklinref.exe --config ./config.json
 }
 ```
 
-3. Finally, environment variables with matching names will be used to overwrite any options loaded so far.
-   - If there is an error while processing an environment variable, the previously loaded option will be used instead. (Note: This may be changed to a fatal error in the future.)
+3. Finally, environment variables with matching names will be used to overwrite
+   any options loaded so far.
+   - If there is an error while processing an environment variable, the
+     previously loaded option will be used instead. (Note: This may be changed
+     to a fatal error in the future.)
 
 The following table describes the configuration options in more detail:
 
@@ -329,34 +380,30 @@ To refresh your data, simply manually delete the file specified by the
 `NLR_DATA_FILE` option and restart the application. Fresh data will be
 downloaded.
 
-> Note: This software will not create or delete directories. Please make sure the target directory specified by `NLR_DATA_FILE` exists. 
+> Note: This software will not create or delete directories. Please make sure
+> the target directory specified by `NLR_DATA_FILE` exists.
 
 ### 2.6. Usage - Coordinate Reference System (CRS)
 
 The coordinate system of the returned geometry depends on the coordinate system
 downloaded from `NLR_DATA_SOURCE_URL`.
 
-However, this software will only work correctly with EPSG:4326 (which is also
-called WGS84 for eldritch reasons beyond mortal comprehension. See
+However, `offset=` feature will only work correctly with EPSG:4326 (which is
+also called WGS84 for eldritch reasons beyond mortal comprehension. See
 <https://spatialreference.org/ref/epsg/wgs-84/>) This is because the
-`&offset=...` parameter will only work correctly if the source uses a spherical
-coordinate system (degrees). The software uses a rough approximation to convert
-from meters to degrees assuming that there are `111320` metres per degree.
+`&offset=...` uses an approximation to convert from meters to degrees assuming
+that there are about `111320` metres per degree.
 
 ## 3. Roadmap / Future Features
 
-- Modify `/show/` mode to accept all query types... maybe by extending the path specification like this
-  - `/show/lines/`,
-  - `/show/points/`,
-  - `/show/batch/` etc ?
-- With `/lines/` mode
-  - define behaviour when a reversed interval is provided (`slk_to < slk_from`).
-  - define behaviour when a zero length interval is provided (`slk_from == slk_to`).
-  - Consider allowing multiple features to be requested at once by one or more of the following methods
-    - sending json with POST mode, or
-    - sending json in GET mode, or
-    - allowing multiple values per parameter `&road=H001,H002`
-- modify `/batch/` mode to accept both interval and point queries
+- Define behaviour when a reversed interval is provided (`slk_to < slk_from`).
+- Define behaviour when a zero length interval is provided
+  (`slk_from == slk_to`).
+- Make `f=GeoJSON` return only the `MultiLineString` or `MultiPoint` feature without wrapping it in the redundant `Feature` object.
+- Make `GeoJSON` and `WKT` modes return a `Point` instead of a `MultiPoint` and a `LineString` instead of a `MultiLineString` when there is only a single result.
+- `f=latlon` averages multiple point results into a single point.
+  - Make a way to optionally do this when fetching points in `wkt`, `geojson` and `json` modes.
+- Modify `/batch/` mode to accept both linestring and point queries at the same time
 
 ## 4. Comparison with previous python version
 

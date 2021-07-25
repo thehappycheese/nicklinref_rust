@@ -105,10 +105,10 @@ fetch("secrets.json")
 add_features(new URLSearchParams(window.location.search)).then(success => success && zoom_to_loaded_features());
 
 async function add_features(url_params, fetch_pool = undefined) {
-
+	f = url_params.get("f")
 	url_params.delete("f");// geojson is default
 
-	let url_to_fetch = "/lines/?" + url_params.toString();
+	let url_to_fetch = "/?" + url_params.toString();
 
 	let fetcher;
 
@@ -127,14 +127,27 @@ async function add_features(url_params, fetch_pool = undefined) {
 		.then(response_text => {
 
 
-			let multi_line_string;
+			let json_features;
 			try {
-				multi_line_string = JSON.parse(response_text);
+				json_features = JSON.parse(response_text);
 			} catch (e) {
 				throw new Error(`Unable parse response: ${e.message}\n${response_text}`);
 			}
 
-			let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(multi_line_string);
+			if (json_features?.geometry?.type == "MultiPoint" && f=="latlon"){
+				// handle the wierd case where the latlon option averages the resulting point position into a single point.
+				let average_x = 0;
+				let average_y = 0;
+				for(item of json_features.geometry.coordinates){
+					average_x+=item[0]
+					average_y+=item[1]
+				}
+				average_x /= json_features.geometry.coordinates.length
+				average_y /= json_features.geometry.coordinates.length
+				json_features = {type:"Feature",geometry:{type:"Point",coordinates:[average_x, average_y]}}
+			}
+			let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(json_features);
+			
 			layer_geojson.getSource().addFeatures(read_features);
 
 
@@ -215,11 +228,6 @@ function run_demo() {
 
 	fetch_pool.then(arr => zoom_to_loaded_features());
 }
-
-
-
-
-
 
 
 let demo_tour_batch = [

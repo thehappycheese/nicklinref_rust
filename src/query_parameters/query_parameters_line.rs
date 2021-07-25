@@ -18,6 +18,9 @@ pub struct QueryParametersLine {
 
 	#[serde(default = "default_output_format")]
 	pub f: OutputFormat,
+
+	// #[serde(default = "default_show")]
+	// pub show:bool
 }
 
 fn default_offset() -> f32 {
@@ -31,3 +34,7 @@ fn default_cwy() -> RequestedCwy {
 fn default_output_format() -> OutputFormat {
 	OutputFormat::GEOJSON
 }
+
+// fn default_show()->bool{
+// 	false
+// }
