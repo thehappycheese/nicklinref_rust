@@ -36,7 +36,7 @@ pub fn get_points(
 		})
 		.flatten()
 		.filter_map(|item| {
-			if item.attributes.END_SLK > query.slk && item.attributes.START_SLK < query.slk {
+			if item.attributes.END_SLK >= query.slk && item.attributes.START_SLK <= query.slk {
 				let lsm: LineStringMeasured = LineStringMeasured::from(&item.geometry);
 				let item_len_km = item.attributes.END_SLK - item.attributes.START_SLK;
 				let frac = (query.slk - item.attributes.START_SLK) / item_len_km;
