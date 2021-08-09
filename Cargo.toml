@@ -1,6 +1,6 @@
 [package]
 name = "nicklinref"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["thehappycheese"]
 edition = "2018"
 readme = "README.md"
