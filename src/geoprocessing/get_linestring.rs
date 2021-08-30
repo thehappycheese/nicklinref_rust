@@ -85,7 +85,10 @@ pub fn get_linestring(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_in
 				Ok("MULTILINESTRING (".to_string() + &line_string_string + ")")
 			},
 			OutputFormat::LATLON=>{
-				return Err("Invalid query type LATLON used with /lines/ query. Please use JSON instead.")
+				return Err("Invalid query type LATLON can only be used with the point query type. Please use f=JSON, or specify slk instead of slk_from and slk_to.")
+			},
+			OutputFormat::LATLONDIR=>{
+				return Err("Invalid query type LATLONDIR can only be used with the point query type. Please use f=JSON, or specify slk instead of slk_from and slk_to.")
 			}
 		}
 }

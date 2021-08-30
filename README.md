@@ -4,21 +4,21 @@
 ## Table of Contents: <!-- omit in toc -->
 
 - [1. Introduction](#1-introduction)
-	- [1.1. Purpose](#11-purpose)
-	- [1.2. Doesn't this already exist?](#12-doesnt-this-already-exist)
-	- [1.3. But What For? (PowerBI Visuals)](#13-but-what-for-powerbi-visuals)
-		- [1.3.1. Icon Map](#131-icon-map)
-		- [1.3.2. NickMap (My Custom Visual)](#132-nickmap-my-custom-visual)
+  - [1.1. Purpose](#11-purpose)
+  - [1.2. Doesn't this already exist?](#12-doesnt-this-already-exist)
+  - [1.3. But What For? (PowerBI Visuals)](#13-but-what-for-powerbi-visuals)
+    - [1.3.1. Icon Map](#131-icon-map)
+    - [1.3.2. NickMap (My Custom Visual)](#132-nickmap-my-custom-visual)
 - [2. Usage](#2-usage)
-	- [2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#21-normal-usage---text-response-geojson--wkt--json--latlon)
-		- [2.1.1. Example - Get a MultiLineString in WKT](#211-example---get-a-multilinestring-in-wkt)
-		- [2.1.2. Example - Get a MultiPoint in GeoJSON](#212-example---get-a-multipoint-in-geojson)
-		- [2.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)](#213-example---get-a-single-comma-separated-latitude-longitude-pair-flatlon)
-	- [2.2. Usage - `/show/` Mode](#22-usage---show-mode)
-	- [2.3. Usage - `/batch/` Mode](#23-usage---batch-mode)
-	- [2.4. Usage - Configuration](#24-usage---configuration)
-	- [2.5. Usage - Data Download and Refresh](#25-usage---data-download-and-refresh)
-	- [2.6. Usage - Coordinate Reference System (CRS)](#26-usage---coordinate-reference-system-crs)
+  - [2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#21-normal-usage---text-response-geojson--wkt--json--latlon)
+    - [2.1.1. Example - Get a MultiLineString in WKT](#211-example---get-a-multilinestring-in-wkt)
+    - [2.1.2. Example - Get a MultiPoint in GeoJSON](#212-example---get-a-multipoint-in-geojson)
+    - [2.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)](#213-example---get-a-single-comma-separated-latitude-longitude-pair-flatlon)
+  - [2.2. Usage - `/show/` Mode](#22-usage---show-mode)
+  - [2.3. Usage - `/batch/` Mode](#23-usage---batch-mode)
+  - [2.4. Usage - Configuration](#24-usage---configuration)
+  - [2.5. Usage - Data Download and Refresh](#25-usage---data-download-and-refresh)
+  - [2.6. Usage - Coordinate Reference System (CRS)](#26-usage---coordinate-reference-system-crs)
 - [3. Roadmap / Future Features](#3-roadmap--future-features)
 - [4. Comparison with previous python version](#4-comparison-with-previous-python-version)
 
@@ -120,7 +120,7 @@ The  parameters are summarised in the table below:
 | `slk`      | Straight Line Kilometre to a point. (should not be combined with `slk_from` and `slk_to`, see notes below)                                                                                            | `slk=3`                     | No       | -         |
 | `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                            | `cway=LS` or `cway=RS`      | Yes      | `LRS`     |
 | `offset`   | Number of metres to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right. | `offset=4` or `offset=-3.5` | Yes      | `0`       |
-| `f`        | Desired response format. Must be `geojson`, `wkt`, `json` or `latlon`. (see notes below)                                                                                                              | `f=geojson`                 | Yes      | `geojson` |
+| `f`        | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)                                                                                                              | `f=geojson`                 | Yes      | `geojson` |
 
 > **Note:**
 > 
@@ -136,10 +136,15 @@ The  parameters are summarised in the table below:
 > 1. When `f=GeoJSON` responses are always wrapped in a `Feature`.
 > 1. The `f=json` format is a nested array in the same format as the geojson
 >    `MultiLineString` or `MultiPoint` `"coordinates":...` array format.
-> 1. The `f=latlon` format is special:
->    - It will return a single comma separated latitude longitude pair
+> 1. The `f=latlon` and `f=latlondir` formats are special:
+>    - These formats are only valid when using the `slk=` mode.
+>    - It will always return a single comma separated latitude longitude pair;
 >    - If multiple points would have been returned (left and right carriageway)
 >      then the average of these positions is returned
+>    - `latlondir` is the same but followed by another comma and then the direction,
+>       in degrees. When the direction is averaged (between left and right carriageway)
+>       weird things might happen if the carriageways are going in very different directions.
+>       Direction is measured anti-clockwise-positive from east.
 
 
 #### 2.1.1. Example - Get a MultiLineString in WKT
