@@ -50,7 +50,7 @@ pub fn get_points(
 				let item_len_km = item.attributes.END_SLK - item.attributes.START_SLK;
 				let frac = (query.slk - item.attributes.START_SLK) / item_len_km;
 				match lsm.interpolate(frac as f64){
-					Some(vec)=>Some((vec, lsm.direction(frac as f64) / std::f64::consts::PI * 180.0f64)),
+					Some(vec)=>Some((vec, lsm.direction(frac as f64))),
 					None=>None
 				}
 			} else {
@@ -116,8 +116,8 @@ pub fn get_points(
 					.iter()
 					.fold(Vector2::new(0f64, 0f64), |acc, (el, _dir)| acc + *el)
 					/ (vertexes.len() as f64);
-				let angle = mean_angle(vertexes.iter().map(|item|item.1).collect()).to_degrees();
-				Ok(format!("{},{},{}", point.y, point.x, angle))
+				let angle = mean_angle(vertexes.iter().map(|item|item.1).collect());
+				Ok(format!("{},{},{}", point.y, point.x, angle.to_degrees()))
 			}else{
 				Err("Found no points")
 			}
