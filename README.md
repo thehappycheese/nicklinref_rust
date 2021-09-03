@@ -120,7 +120,8 @@ The  parameters are summarised in the table below:
 | `slk`      | Straight Line Kilometre to a point. (should not be combined with `slk_from` and `slk_to`, see notes below)                                                                                            | `slk=3`                     | No       | -         |
 | `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                            | `cway=LS` or `cway=RS`      | Yes      | `LRS`     |
 | `offset`   | Number of metres to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right. | `offset=4` or `offset=-3.5` | Yes      | `0`       |
-| `f`        | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)                                                                                                              | `f=geojson`                 | Yes      | `geojson` |
+| `f`        | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)                                                                                                 | `f=geojson`                 | Yes      | `geojson` |
+| `m`        | Option to include `M` coordinates in `geojson`, `wkt` or `json` modes.                                                                                                                                | `m=true`                    | Yes      | `false`   |
 
 > **Note:**
 > 
