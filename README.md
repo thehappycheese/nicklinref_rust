@@ -211,7 +211,7 @@ This mode expects a `POST` request to <http://localhost:8080/batch/> by default.
 See details below.
 
 <details>
-<summary>Click to expand details of `/batch/` Mode</summary>
+<summary style="color:red; font-weight:bold; font-size:1.1em;margin:2em 0">Click to expand details of `/batch/` Mode</summary>
 
 The body of the request must be binary data consisting of a series of frames
 with the format shown below. Any number of frames can be packed into a single
