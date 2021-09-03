@@ -30,7 +30,7 @@ impl Settings {
 		let mut settings: Settings = match env::args().skip_while(|item| item != "--config").nth(1){
 			// TODO: check this works with spaces and quotes etc
 			Some(path) => {
-				println!("Found config file based on --config command line argument: {}", path);
+				println!("Found argument --config: {}", path);
 				match fs::File::open(&path) {
 					Ok(config_file) => match serde_json::from_reader(config_file) {
 						Ok(config) => config,
@@ -49,7 +49,8 @@ impl Settings {
 				}
 			}
 			None => {
-				println!("--config command line argument not provided. Using default settings.");
+				println!("`--config \"some_config.json\"` command line argument not found.");
+				println!("Using default settings.");
 				Settings::default()
 			},
 		};
@@ -84,13 +85,12 @@ where
 				val
 			},
 			Err(e) => {
-				// TODO: This should probably be a fatal error.
-				println!("   environment variable {} failed to parse! The provided value '{}' could not be parsed because {}. Reverting to default: {}", environment_variable_name, val_str, e, output);				
-				output.clone()
+				println!("   {} found but failed to parse! The provided value '{}' could not be parsed because {}.", environment_variable_name, val_str, e);				
+				panic!("Please update environment variable `{}`.", environment_variable_name);
 			},
 		},
 		_ => {
-			println!("   environment variable {} not found. Using default: {}", environment_variable_name, output);
+			println!("   {} not found. Using: {}", environment_variable_name, output);
 			output.clone()
 		}
 	};

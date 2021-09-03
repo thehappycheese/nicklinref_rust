@@ -8,7 +8,7 @@ use nickslinetoolsrust::line_string_measured::{LineStringMeasured};
 use crate::unit_conversion::convert_metres_to_degrees;
 
 
-pub fn get_linestring(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_index:&Arc<LookupMap>)->Result<String, & 'static str>{
+pub fn get_linestring_m(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_index:&Arc<LookupMap>)->Result<String, & 'static str>{
 	let road_data:&RoadDataByCwy = match match query.road.chars().next(){
 		Some(first_letter)=>{
 			match data_index.get(&first_letter) {
@@ -42,17 +42,25 @@ pub fn get_linestring(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_in
 				let frac_end = (query.slk_to-item.attributes.START_SLK) / item_len_km;
 
 				match lsm.cut_twice(frac_start.into(), frac_end.into()){
-					(_, Some(b), _) => if query.offset == 0.0 {
-								Some(b.into_tuples())
+					(_, Some(b), _) => {
+							if query.offset == 0.0 {
+								Some(b.into_tuples_measured(
+									query.slk_from.max(item.attributes.START_SLK)as f64,
+									query.slk_to.min(item.attributes.END_SLK) as f64
+								))
 							}else{
 								let degree_offset:f64 = convert_metres_to_degrees(query.offset.into());
 								match b.offset_basic(-degree_offset){
-									Some(item)=>{
-										Some(item.iter().map(|ii|ii.into()).collect())
+									Some(offset_ls)=>{
+										Some(LineStringMeasured::from(offset_ls).into_tuples_measured(
+											query.slk_from.max(item.attributes.START_SLK)as f64,
+											query.slk_to.min(item.attributes.END_SLK) as f64
+										))
 									},
 									None=>None
 								}
-							},
+							}
+						},
 					_=>None
 				}
 
@@ -83,11 +91,11 @@ pub fn get_linestring(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_in
 			OutputFormat::WKT => {
 				let line_string_string = features
 					.map(|linestring|{
-							"(".to_string() + &linestring.iter().map(|vertex| format!("{} {}", vertex.0, vertex.1)).collect::<Vec<String>>().join(",") + ")"
+							"(".to_string() + &linestring.iter().map(|vertex| format!("{} {} {}", vertex.0, vertex.1, vertex.2)).collect::<Vec<String>>().join(",") + ")"
 					})
 					.collect::<Vec<String>>()
 					.join(",");
-				Ok("MULTILINESTRING (".to_string() + &line_string_string + ")")
+				Ok("MULTILINESTRING M (".to_string() + &line_string_string + ")")
 			},
 			OutputFormat::LATLON=>{
 				return Err("Invalid query type LATLON can only be used with the point query type. Please use f=JSON, or specify slk instead of slk_from and slk_to.")

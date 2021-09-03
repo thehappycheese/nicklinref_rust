@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "nicklinref"
-version = "0.7.0"
+version = "0.7.2"
 dependencies = [
  "bytes",
  "lz-fear",
@@ -577,8 +577,8 @@ dependencies = [
 
 [[package]]
 name = "nickslinetoolsrust"
-version = "1.0.1"
-source = "git+https://github.com/thehappycheese/nicks_line_tools_rust.git?tag=v1.0.1#0afc2613fa92da9c11a0cd4b64a4e0a242b27f68"
+version = "1.2.0"
+source = "git+https://github.com/thehappycheese/nicks_line_tools_rust.git?tag=v1.2.0#75085faeec20e5e87b1facf993b893c4c308e37c"
 dependencies = [
  "serde",
 ]

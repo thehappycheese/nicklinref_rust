@@ -17,7 +17,7 @@ use settings::Settings;
 
 use update_data::{update_data, load_data, perform_analysis, LookupMap};
 use query_parameters::{ QueryParameterBatch};
-use geoprocessing::{get_linestring, get_points};
+use geoprocessing::{get_linestring, get_points, get_linestring_m};
 use esri_serde::{LayerSaved};
 use basic_error::BasicErrorWarp;
 
@@ -104,9 +104,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		no_path.clone()
 		.and(warp::query())
 		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| async move{
-			match get_linestring(&query, &data, &data_index){
-				Ok(s)=>Ok(s),
-				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+			if query.m {
+				match get_linestring_m(&query, &data, &data_index){
+					Ok(s)=>Ok(s),
+					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+				}
+			}else{
+				match get_linestring(&query, &data, &data_index){
+					Ok(s)=>Ok(s),
+					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+				}
 			}
 		});
 

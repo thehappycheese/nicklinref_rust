@@ -19,6 +19,9 @@ pub struct QueryParametersLine {
 	#[serde(default = "default_output_format")]
 	pub f: OutputFormat,
 
+	#[serde(default = "default_m")]
+	pub m:bool,
+
 	// #[serde(default = "default_show")]
 	// pub show:bool
 }
@@ -35,6 +38,8 @@ fn default_output_format() -> OutputFormat {
 	OutputFormat::GEOJSON
 }
 
-// fn default_show()->bool{
-// 	false
-// }
+fn default_m()->bool{
+ 	false
+}
+
+

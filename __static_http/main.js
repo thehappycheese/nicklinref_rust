@@ -27,8 +27,9 @@ let layer_osm = new ol.layer.Tile({
 	source: new ol.source.OSM()
 })
 
+let geojson_source = new ol.source.Vector({})
 let layer_geojson = new ol.layer.Vector({
-	source: new ol.source.Vector({}),
+	source: geojson_source,
 	style: [
 		new ol.style.Style({
 			stroke: new ol.style.Stroke({
@@ -105,8 +106,11 @@ fetch("secrets.json")
 add_features(new URLSearchParams(window.location.search)).then(success => success && zoom_to_loaded_features());
 
 async function add_features(url_params, fetch_pool = undefined) {
-	f = url_params.get("f")
-	url_params.delete("f");// geojson is default
+	f = url_params.get("f") ?? "geojson";
+	if(!(f.toLowerCase()==="latlon" || f.toLowerCase()==="latlondir")){
+		url_params.set("f","wkt");// geojson is default
+	}
+
 
 	let url_to_fetch = "/?" + url_params.toString();
 
@@ -127,29 +131,43 @@ async function add_features(url_params, fetch_pool = undefined) {
 		.then(response_text => {
 
 
-			let json_features;
-			try {
-				json_features = JSON.parse(response_text);
-			} catch (e) {
-				throw new Error(`Unable parse response: ${e.message}\n${response_text}`);
-			}
+			// let json_features;
+			// try {
+			// 	json_features = JSON.parse(response_text);
+			// } catch (e) {
+			// 	throw new Error(`Unable parse response: ${e.message}\n${response_text}`);
+			// }
 
-			if (json_features?.geometry?.type == "MultiPoint" && f=="latlon"){
-				// handle the wierd case where the latlon option averages the resulting point position into a single point.
-				let average_x = 0;
-				let average_y = 0;
-				for(item of json_features.geometry.coordinates){
-					average_x+=item[0]
-					average_y+=item[1]
-				}
-				average_x /= json_features.geometry.coordinates.length
-				average_y /= json_features.geometry.coordinates.length
-				json_features = {type:"Feature",geometry:{type:"Point",coordinates:[average_x, average_y]}}
-			}
-			let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(json_features);
+			// if (json_features?.geometry?.type == "MultiPoint" && f=="latlon"){
+			// 	// handle the wierd case where the latlon option averages the resulting point position into a single point.
+			// 	let average_x = 0;
+			// 	let average_y = 0;
+			// 	for(item of json_features.geometry.coordinates){
+			// 		average_x+=item[0]
+			// 		average_y+=item[1]
+			// 	}
+			// 	average_x /= json_features.geometry.coordinates.length
+			// 	average_y /= json_features.geometry.coordinates.length
+			// 	json_features = {type:"Feature",geometry:{type:"Point",coordinates:[average_x, average_y]}}
+			// }
+			// let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(json_features);
 			
-			layer_geojson.getSource().addFeatures(read_features);
-
+			if(f.toLowerCase()==="latlon"){
+				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(
+					response_text.split(",").map(parseFloat).reverse()
+				))));
+			}else if(f.toLowerCase()==="latlondir"){
+				const pointer_len = 0.0003;
+				let [dir, ...lonlat] = response_text.split(",").map(parseFloat).reverse()
+				let lonlat2 = [lonlat[0]+Math.cos(dir/180*Math.PI)*pointer_len,lonlat[1]+Math.sin(dir/180*Math.PI)*pointer_len]
+				lonlat = ol.proj.fromLonLat(lonlat)
+				lonlat2 = ol.proj.fromLonLat(lonlat2)
+				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.LineString([lonlat,lonlat2])));
+				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.Point(lonlat)));
+			}else{
+				let read_features = new ol.format.WKT().readFeatures(response_text,{ featureProjection, dataProjection });
+				layer_geojson.getSource().addFeatures(read_features);
+			}
 
 			return true;
 		});
