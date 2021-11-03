@@ -5,6 +5,7 @@ use nickslinetoolsrust::line_string_measured::LineStringMeasured;
 use nickslinetoolsrust::vector2::Vector2;
 use std::str;
 use std::sync::Arc;
+use crate::unit_conversion::convert_metres_to_degrees;
 
 /// Computes the mean angle from angles in radians
 /// (from https://rosettacode.org/wiki/Averages/Mean_angle#Rust)
@@ -49,10 +50,25 @@ pub fn get_points(
 				let lsm: LineStringMeasured = LineStringMeasured::from(&item.geometry);
 				let item_len_km = item.attributes.END_SLK - item.attributes.START_SLK;
 				let frac = (query.slk - item.attributes.START_SLK) / item_len_km;
-				match lsm.interpolate(frac as f64){
-					Some(vec)=>Some((vec, lsm.direction(frac as f64))),
-					None=>None
+
+				// support offset
+				let lsmo:Option<LineStringMeasured> = if query.offset == 0.0 {
+					Some(lsm)
+				}else{
+					match lsm.offset_basic(convert_metres_to_degrees(query.offset.into())) {
+						Some(vec_of_vector2)=> Some(LineStringMeasured::from(vec_of_vector2)),
+						None=>None
+					}
+				};
+				
+				match lsmo {
+					Some(lsm)=> match lsm.interpolate(frac as f64) {
+						Some(vec)=>Some((vec, lsm.direction(frac as f64))),
+						None=>None
+					},
+					_=>None
 				}
+
 			} else {
 				None
 			}
