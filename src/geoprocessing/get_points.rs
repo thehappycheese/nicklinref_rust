@@ -55,7 +55,8 @@ pub fn get_points(
 				let lsmo:Option<LineStringMeasured> = if query.offset == 0.0 {
 					Some(lsm)
 				}else{
-					match lsm.offset_basic(convert_metres_to_degrees(query.offset.into())) {
+					let degree_offset:f64 = -convert_metres_to_degrees(query.offset.into());
+					match lsm.offset_basic(degree_offset) {
 						Some(vec_of_vector2)=> Some(LineStringMeasured::from(vec_of_vector2)),
 						None=>None
 					}

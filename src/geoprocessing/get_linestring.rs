@@ -45,8 +45,8 @@ pub fn get_linestring(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_in
 					(_, Some(b), _) => if query.offset == 0.0 {
 								Some(b.into_tuples())
 							}else{
-								let degree_offset:f64 = convert_metres_to_degrees(query.offset.into());
-								match b.offset_basic(-degree_offset){
+								let degree_offset:f64 = -convert_metres_to_degrees(query.offset.into());
+								match b.offset_basic(degree_offset){
 									Some(item)=>{
 										Some(item.iter().map(|ii|ii.into()).collect())
 									},

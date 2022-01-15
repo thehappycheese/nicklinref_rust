@@ -49,8 +49,8 @@ pub fn get_linestring_m(query:&QueryParametersLine, data:&Arc<LayerSaved>, data_
 									query.slk_to.min(item.attributes.END_SLK) as f64
 								))
 							}else{
-								let degree_offset:f64 = convert_metres_to_degrees(query.offset.into());
-								match b.offset_basic(-degree_offset){
+								let degree_offset:f64 = -convert_metres_to_degrees(query.offset.into());
+								match b.offset_basic(degree_offset){
 									Some(offset_ls)=>{
 										Some(LineStringMeasured::from(offset_ls).into_tuples_measured(
 											query.slk_from.max(item.attributes.START_SLK)as f64,
