@@ -22,6 +22,16 @@
 - [3. Roadmap / Future Features](#3-roadmap--future-features)
 - [4. Comparison with previous python version](#4-comparison-with-previous-python-version)
 
+### 0. Megalinref
+
+Please see the succesor project I am working on <https://github.com/thehappycheese/megalinref> ; 
+its a rust-powered python library that will do all the same things as this library, but without the
+overhead of running a rest service on localhost.
+
+I'd still like to deploy nicklinref_rust to a cloud service, 
+but it turns out that's difficult and expensive (cheap function/lambda 'serverless' options are not a good fit)
+and for the time being im not keen to pursue it.
+
 ## 1. Introduction
 
 ### 1.1. Purpose
@@ -87,6 +97,8 @@ WKT. <https://icon-map.com/> IconMap is an excellent visual which is finished
 and polished and is easy to download and use.
 
 #### 1.3.2. NickMap (My Custom Visual)
+
+> Note: the url below is broken for the time being.
 
 See my related PowerBI custom visual project here:
 <https://github.com/thehappycheese/powerbi-visual-geojson-map-1> This visual is
