@@ -22,7 +22,7 @@
 - [3. Roadmap / Future Features](#3-roadmap--future-features)
 - [4. Comparison with previous python version](#4-comparison-with-previous-python-version)
 
-### 0. Megalinref
+## 0. Successor Project: Megalinref
 
 Please see the succesor project I am working on <https://github.com/thehappycheese/megalinref> ; 
 its a rust-powered python library that will do all the same things as this library, but without the
