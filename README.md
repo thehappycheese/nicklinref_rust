@@ -30,10 +30,13 @@
 
 ### 1.1. Purpose
 
-This application is a REST service that can slice portions of the Western
-Australia road network geometry and return either `GeoJSON` or `WKT` features.
+This application is a 'Web Service' (which runs as a windows or linux
+executable) which can be queried to slice portions of the Western Australia road
+network geometry and return either `GeoJSON` or `WKT` features. For example
+Excel can query this service using the
+[`=WEBSERVICE()` formula](https://support.microsoft.com/en-us/office/webservice-function-0546a35a-ecc6-4739-aed7-c0b7ce1562c4).
 
-To use pre-compiled version of this software please visit the
+To use pre-compiled version of this application please visit the
 [releases](/releases) page and download and extract one of the zip files.
 
 Run `nicklinref.exe` then visit
@@ -47,15 +50,15 @@ to get WKT instead of the default GeoJSON output.
 
 ### 1.2. Doesn't this already exist?
 
-This software is different from the from the REST services already available at
+This software is different from the from the 'Web Services' / APIs already available at
 <https://data.wa.gov.au> because it properly truncates the geometry at the
-requested `slk_from` and `slk_to` endpoints. The REST services available at
+requested `slk_from` and `slk_to` endpoints. The web services available at
 <https://data.wa.gov.au> can only filter records that intersect the requested SLK range
 according to the row structure of the underlying storage table.
 
 Each row (in the database storing the Road Network) has a fixed `START_SLK` and
 `END_SLK`, and contains the road geometry for that section. Each row typically
-represents a section of road from one intersection to the next intersection. The REST
+represents a section of road from one intersection to the next intersection. The web
 services at <https://data.wa.gov.au> can only return whole rows, and are not able
 to return only a portion of the road geometry if the requested range partly
 intersects with a row's SLK range.
@@ -64,7 +67,7 @@ An ArcMap geoprocessing model could be used as an alternative to this software.
 To achieve the same result it ends up being a pretty complicated model involving
 several calls to `CreateRoutes_lr` and `MakeRouteEventLayer_lr` functions with a
 heap of filters, joins and projections. Never the less, this model could be
-published as a 'Geoprocessing Service' with very similar features to this REST
+published as a 'Geoprocessing Service' with very similar features to this web
 service. There are a few reasons I think this software may perform better
 anyway, or be more convenient:
 
@@ -139,7 +142,7 @@ Local government roads are supported.
 
 ### 4.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)
 
-When the rest service is running locally (on your own machine) it can be accessed at the following address by default:
+When the web service is running locally (on your own machine) it can be accessed at the following address by default:
 
 <http://localhost:8080/?>...
 
@@ -452,7 +455,7 @@ that there are about `111320` metres per degree.
 This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>
 
->Note: This version uses an incompatible REST API.
+>Note: This version uses an incompatible API (The query parameter names and functions are different).
 
 I plan to abandon the python version and maintain this rust version in the
 future. Reasons below:
