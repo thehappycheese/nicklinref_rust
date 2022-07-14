@@ -9,28 +9,22 @@
   - [1.3. But What For? (PowerBI Visuals)](#13-but-what-for-powerbi-visuals)
     - [1.3.1. Icon Map](#131-icon-map)
     - [1.3.2. NickMap (My Custom Visual)](#132-nickmap-my-custom-visual)
-- [2. Usage](#2-usage)
-  - [2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#21-normal-usage---text-response-geojson--wkt--json--latlon)
-    - [2.1.1. Example - Get a MultiLineString in WKT](#211-example---get-a-multilinestring-in-wkt)
-    - [2.1.2. Example - Get a MultiPoint in GeoJSON](#212-example---get-a-multipoint-in-geojson)
-    - [2.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)](#213-example---get-a-single-comma-separated-latitude-longitude-pair-flatlon)
-  - [2.2. Usage - `/show/` Mode](#22-usage---show-mode)
-  - [2.3. Usage - `/batch/` Mode](#23-usage---batch-mode)
-  - [2.4. Usage - Configuration](#24-usage---configuration)
-  - [2.5. Usage - Data Download and Refresh](#25-usage---data-download-and-refresh)
-  - [2.6. Usage - Coordinate Reference System (CRS)](#26-usage---coordinate-reference-system-crs)
-- [3. Roadmap / Future Features](#3-roadmap--future-features)
-- [4. Comparison with previous python version](#4-comparison-with-previous-python-version)
-
-## 0. Successor Project: Megalinref
-
-Please see the succesor project I am working on <https://github.com/thehappycheese/megalinref> ; 
-its a rust-powered python library that will do all the same things as this library, but without the
-overhead of running a rest service on localhost.
-
-I'd still like to deploy nicklinref_rust to a cloud service, 
-but it turns out that's difficult and expensive (cheap function/lambda 'serverless' options are not a good fit)
-and for the time being im not keen to pursue it.
+- [2. SLK vs. Chainage vs. True Distance](#2-slk-vs-chainage-vs-true-distance)
+- [3. Local Government Roads](#3-local-government-roads)
+- [4. Usage](#4-usage)
+  - [4.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#41-normal-usage---text-response-geojson--wkt--json--latlon)
+    - [4.1.1. Example - Get a MultiLineString in WKT](#411-example---get-a-multilinestring-in-wkt)
+    - [4.1.2. Example - Get a MultiPoint in GeoJSON](#412-example---get-a-multipoint-in-geojson)
+    - [4.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)](#413-example---get-a-single-comma-separated-latitude-longitude-pair-flatlon)
+  - [4.2. Usage - `/show/` Mode](#42-usage---show-mode)
+  - [4.3. Usage - `/batch/` Mode](#43-usage---batch-mode)
+  - [4.4. Usage - Configuration](#44-usage---configuration)
+  - [4.5. Usage - Data Download and Refresh](#45-usage---data-download-and-refresh)
+  - [4.6. Usage - Coordinate Reference System (CRS)](#46-usage---coordinate-reference-system-crs)
+- [5. Roadmap / Future Features](#5-roadmap--future-features)
+- [6. Related Projects](#6-related-projects)
+  - [6.1. Python version (Predecessor to this Rust version)](#61-python-version-predecessor-to-this-rust-version)
+  - [6.2. Megalinref (Successor / Sibling to this Repo)](#62-megalinref-successor--sibling-to-this-repo)
 
 ## 1. Introduction
 
@@ -39,7 +33,10 @@ and for the time being im not keen to pursue it.
 This application is a REST service that can slice portions of the Western
 Australia road network geometry and return either `GeoJSON` or `WKT` features.
 
-Once it has been compiled, run `nicklinref.exe` then visit
+To use pre-compiled version of this software please visit the
+[releases](/releases) page and download and extract one of the zip files.
+
+Run `nicklinref.exe` then visit
 <http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> to test if it is
 working.
 
@@ -53,7 +50,7 @@ to get WKT instead of the default GeoJSON output.
 This software is different from the from the REST services already available at
 <https://data.wa.gov.au> because it properly truncates the geometry at the
 requested `slk_from` and `slk_to` endpoints. The REST services available at
-<https://data.wa.gov.au> can only filter records that intersect the requested range
+<https://data.wa.gov.au> can only filter records that intersect the requested SLK range
 according to the row structure of the underlying storage table.
 
 Each row (in the database storing the Road Network) has a fixed `START_SLK` and
@@ -114,9 +111,33 @@ If everything goes to plan, this visual might be better than IconMap:
 
 ![Live Georeferencing field wells](./readme_extras/live_georeferencing.jpg)
 
-## 2. Usage
+## 2. SLK vs. Chainage vs. True Distance
 
-### 2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)
+SLK stands for "Straight Line Kilometre" and is sometimes called 'chainage' or
+'kilometrage' in other contexts.
+
+At Main Roads Western Australia SLK refers to an "adjusted" linear measure which
+has discontinuities called 'Points of Equation' (~100 of them throughout the
+state road network) where there is an abrupt increase or decrease in SLK. This
+is done so that when asset locations are recorded by SLK, these records are not
+invalidated when a road realignment project modifies the length of a road.
+
+This software has no special compensation to handle POE discontinuities. Please
+expect results at POEs to have gaps or overlaps.
+
+The non-adjusted linear measure is called "True Distance".
+
+This software is only capable of looking up Lat/Lon from SLK. Perhaps in the
+future there will be an additional feature to look up Lat/Lon from True
+Distance.
+
+## 3. Local Government Roads
+
+Local government roads are supported.
+
+## 4. Usage
+
+### 4.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)
 
 When the rest service is running locally (on your own machine) it can be accessed at the following address by default:
 
@@ -160,49 +181,49 @@ The  parameters are summarised in the table below:
 >       Direction is measured anti-clockwise-positive from east.
 
 
-#### 2.1.1. Example - Get a MultiLineString in WKT
+#### 4.1.1. Example - Get a MultiLineString in WKT
 
 The following example fetches the Left and Single carriageway portions of Albany
 Highway from slk 1km to 2km and offsets them 10 metres to the left of the road.
 The result is returned in WKT format as a single `MULTILINESTRING` feature:
 
-<http://localhost:8080/lines/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt> ⟶
+<http://localhost:8080/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt> ⟶
 
 ```wkt
 MULTILINESTRING ((115.88771097361135 -31.967604589743765,115.88776331305647 -31.96753166223028,115.88782456479156 -31.967494045166685,115.88808285746482 -31.967581573012584,115.88842643824691 -31.967706811122067,115.88865106830647 -31.967794863020398,115.88878639134748 -31.967856418305686,115.88961385220324 -31.968270404421514),(115.88961222617614 -31.96826961114868,115.89009682355594 -31.968500014510138),(115.89009709103813 -31.968500142226866,115.8908060320806 -31.96884008302064,115.89130780129135 -31.96906658240955),(115.89129847166095 -31.9690630113479,115.8924861744535 -31.96944832848648),(115.89248599022535 -31.969448268938134,115.89367451654047 -31.969831024006037),(115.89367516412221 -31.96983123526756,115.89489443528633 -31.970234120891217),(115.89489484503049 -31.970234348879462,115.8952199535067 -31.97034351139344,115.89552559070945 -31.970457312501807,115.89572276324779 -31.97054445312055,115.89588899502093 -31.97062796284781,115.89603052161054 -31.9707213605839),(115.89603611706656 -31.97072540301373,115.8961699852627 -31.970830173406412,115.89636973106218 -31.970999046961516,115.89654509709025 -31.971164236270756,115.89708949236724 -31.971705035229636),(115.88735210575929 -31.967327078117492,115.88761740846113 -31.967472091243042),(115.88761495220085 -31.96747075121283,115.88782449298621 -31.967576711138406))
 ```
 
-#### 2.1.2. Example - Get a MultiPoint in GeoJSON
+#### 4.1.2. Example - Get a MultiPoint in GeoJSON
 
 The following example fetches the a point for both the Left and right
 carriageway portions of Albany Highway at slk 2km. The format is not specified
 and therefore the result is returned in default GeoJSON as a`MultiPoint`
 feature:
 
-<http://localhost:8080/lines/?road=H001&slk=2> ⟶
+<http://localhost:8080/?road=H001&slk=2> ⟶
 
 ```json
 {"type":"Feature", "geometry":{"type":"MultiPoint", "coordinates":[[115.89702617983814,-31.97176876372234],[115.89692159880637,-31.97178473847775]]}}
 ```
 
-#### 2.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)
+#### 4.1.3. Example - Get a single comma separated latitude longitude pair (`f=latlon`)
 
 The following example fetches the a single pointon Albany Highway at slk 2km.
 Since there is no carriageway filter, it returns a position somewhere between
 the left and right carriageway. The format is not specified and therefore the
 result is returned in default GeoJSON as a`MultiPoint` feature:
 
-<http://localhost:8080/lines/?road=H001&slk=2> ⟶
+<http://localhost:8080/?road=H001&slk=2> ⟶
 
 ```json
 {"type":"Feature", "geometry":{"type":"MultiPoint", "coordinates":[[115.89702617983814,-31.97176876372234],[115.89692159880637,-31.97178473847775]]}}
 ```
 
-### 2.2. Usage - `/show/` Mode
+### 4.2. Usage - `/show/` Mode
 
-Show mode works the same as `/lines/` mode except that instead of returning raw
-data, it displays an interactive map when viewed in the browser. This is useful
-to confirm that queries are working as intended.
+Show mode works the same as described above, except that instead of returning
+raw data, it displays an interactive map when viewed in a web browser. This is
+useful to confirm that queries are working as intended.
 
 > TODO: `/show/` mode does not work with point queries. This is a planned
 > feature.
@@ -213,7 +234,7 @@ to confirm that queries are working as intended.
 Query mode can easily be used from Excel with the `=WEBSERVICE()` formula, or
 from Power BI using the `=Web.Contents()` function.
 
-### 2.3. Usage - `/batch/` Mode
+### 4.3. Usage - `/batch/` Mode
 
 `/batch/` mode is an advanced feature that allows ultra-fast georeferecing with
 minimal network traffic. This mode exists to integrate with PowerBI custom
@@ -259,12 +280,12 @@ however a simplified version is shown below:
 // =========== Helper functions: ===========
 let CWY_LOOKUP = {
     L: 0b0000_0100,
-	R: 0b0000_0001,
-	S: 0b0000_0010,
-	LR: 0b0000_0101,
+    R: 0b0000_0001,
+    S: 0b0000_0010,
+    LR: 0b0000_0101,
     LS: 0b0000_0110,
-	RS: 0b0000_0011,
-	LRS: 0b0000_0111
+    RS: 0b0000_0011,
+    LRS: 0b0000_0111
 }
 function binary_encode_request(road, slk_from, slk_to, offset, cwy) {
     let text_encoder = new TextEncoder();
@@ -352,7 +373,7 @@ The output of the script above is shown below:
 ```
 </details>
 
-### 2.4. Usage - Configuration
+### 4.4. Usage - Configuration
 
 To load configuration, the application will take the following steps:
 
@@ -392,7 +413,7 @@ The following table describes the configuration options in more detail:
 | `NLR_DATA_SOURCE_URL` | This is the ArcGIS REST service where the road network is downloaded from. It is assumed that multiple requests are needed and the `&resultOffset=...` parameter is used to repeatedly fetch more data. Only certain fields are fetched `outFields=ROAD,START_SLK,END_SLK,CWY` and the output spatial reference is specified `&outSR=4326`. ESRI's own json format (`&f=json`) is expected because `&f=geojson` does not seem to work properly. Also note that currently the field names `ROAD`, `START_SLK`, `END_SLK`, `CWY` are hard-coded and must exist on the incoming data. |
 | `NLR_STATIC_HTTP`     | Used by the `/show/` feature to display an interactive map. The directory specified by this config option should exist or I think the application may crash on startup. The directory can probably be empty though if it is not required. The `__static_http` folder in this repo contains the files required.                                                                                                                                                                                                                                                                     |
 
-### 2.5. Usage - Data Download and Refresh
+### 4.5. Usage - Data Download and Refresh
 
 To refresh your data, simply manually delete the file specified by the
 `NLR_DATA_FILE` option and restart the application. Fresh data will be
@@ -401,7 +422,7 @@ downloaded.
 > Note: This software will not create or delete directories. Please make sure
 > the target directory specified by `NLR_DATA_FILE` exists.
 
-### 2.6. Usage - Coordinate Reference System (CRS)
+### 4.6. Usage - Coordinate Reference System (CRS)
 
 The coordinate system of the returned geometry depends on the coordinate system
 downloaded from `NLR_DATA_SOURCE_URL`.
@@ -412,9 +433,10 @@ also called WGS84 for eldritch reasons beyond mortal comprehension. See
 `&offset=...` uses an approximation to convert from meters to degrees assuming
 that there are about `111320` metres per degree.
 
-## 3. Roadmap / Future Features
+## 5. Roadmap / Future Features
 
 - Define behaviour when a reversed interval is provided (`slk_to < slk_from`).
+- Improve error message when selecting an SLK which is beyond the valid range for a road that exists.
 - Define behaviour when a zero length interval is provided
   (`slk_from == slk_to`).
 - Make `f=GeoJSON` return only the `MultiLineString` or `MultiPoint` feature without wrapping it in the redundant `Feature` object.
@@ -423,7 +445,9 @@ that there are about `111320` metres per degree.
   - Make a way to optionally do this when fetching points in `wkt`, `geojson` and `json` modes.
 - Modify `/batch/` mode to accept both linestring and point queries at the same time
 
-## 4. Comparison with previous python version
+## 6. Related Projects
+
+### 6.1. Python version (Predecessor to this Rust version)
 
 This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>
@@ -440,3 +464,13 @@ future. Reasons below:
 | Startup time | Very slow.                                                                                                                                                                                                               | Also a bit slow (due to reading the input data and decompressing it in memory on every startup) but still much faster than the python version.                                                                                                                                                                                                                                                                                 |
 | Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform. On Debian you may need to run `apt-get install libssl-dev`. I've never had issues compiling on windows but I have only done that on one machine.                                                                                                                                                                                                                                 |
 | Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar. I don't know how to make containers that can go to sleep without unloading nicklinref from RAM. |
+
+### 6.2. Megalinref (Successor / Sibling to this Repo)
+
+Please see the succesor project I am working on <https://github.com/thehappycheese/megalinref> ; 
+its a rust-powered python library that will do all the same things as this library, but without the
+overhead of running a rest service on localhost.
+
+I'd still like to deploy nicklinref_rust to a cloud service, 
+but it turns out that's difficult and expensive (cheap function/lambda 'serverless' options are not a good fit)
+and for the time being im not keen to pursue it.
