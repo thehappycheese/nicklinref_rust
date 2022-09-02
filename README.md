@@ -228,9 +228,6 @@ Show mode works the same as described above, except that instead of returning
 raw data, it displays an interactive map when viewed in a web browser. This is
 useful to confirm that queries are working as intended.
 
-> TODO: `/show/` mode does not work with point queries. This is a planned
-> feature.
-
 <http://localhost:8080/show/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt>
 ![show_demo.jpg](./readme_extras/show_demo.jpg)
 

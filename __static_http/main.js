@@ -1,5 +1,6 @@
-
-
+///////////////////////
+// View / Zoom
+///////////////////////
 let view = new ol.View({
 	center: [12898411.077810172, -3757643.0263860035],
 	zoom: 5.5,
@@ -19,9 +20,33 @@ function reset_view() {
 	delete localStorage.view;
 }
 
+
+function zoom_to_loaded_features() {
+	let target_extent = layer_geojson.getSource().getExtent();
+	let resolution    = view.getResolutionForExtent(target_extent);
+	let target_zoom   = view.getZoomForResolution(resolution) / 1.01;
+	let target_center = ol.extent.getCenter(target_extent);
+
+	view.animate({
+		zoom     : target_zoom,
+		center   : target_center,
+		duration : 1500,
+		easing   : ol.easing.easeOut
+	});
+}
+
+///////////////////////
+// Projection
+///////////////////////
+
 let featureProjection = view.getProjection();
 
 let dataProjection = new ol.format.GeoJSON().readProjection({ "crs": { "type": "EPSG", "properties": { "code": 4326 } } });
+
+
+///////////////////////
+// Map Layers
+///////////////////////
 
 let layer_osm = new ol.layer.Tile({
 	source: new ol.source.OSM()
@@ -56,11 +81,19 @@ let layer_geojson = new ol.layer.Vector({
 	]
 });
 
+///////////////////////
+// Map Object
+///////////////////////
+
 let map = new ol.Map({
 	layers: [layer_osm, layer_geojson],
 	target: 'map',
 	view
 });
+
+///////////////////////
+// Map Events
+///////////////////////
 
 map.on("moveend", (e) => {
 	let view = map.getView();
@@ -70,47 +103,24 @@ map.on("moveend", (e) => {
 	}))
 })
 
-fetch("secrets.json")
-	.then(resp => {
-		if (resp.ok) return resp
-		throw new Error(`Request for secrets failed: ${resp.statusText}`)
-	})
-	.then(resp => resp.json())
-	.catch(err => {
-		throw new Error(`Decoding secrets failed: ${err}`)
-	})
-	.then(secrets => {
 
-		window.layer_metro_map = new ol.layer.Tile({
-			source: new ol.source.XYZ({
-				url: secrets.metromap,
-			})
-		});
-
-		window.layer_skyview_tiles = new ol.layer.Tile({
-			source: new ol.source.TileArcGISRest({
-				params: {
-					FORMAT: "jpgpng",
-					compressionQuality: 75,
-					TRANSPARENT: false
-				},
-				// crossOrigin:"Anonymous", // Required if we need to retrieve canvas pixle data later.
-				url: secrets.skyview
-			})
-		});
-
-	});
-
-
+///////////////////////
+// On Load, Fetch Features based on URL, and add to map
+///////////////////////
 
 add_features(new URLSearchParams(window.location.search)).then(success => success && zoom_to_loaded_features());
+
+//////////////////////////////////////////////////////////////////////
+// Get Geometry
+// Optionally, use a Fetch_Queue to avoid browser error from too many parallel requests
+// For which the fetch API itself provides no convienient work-around
+///////////////////////////////////////////////////////////////////////
 
 async function add_features(url_params, fetch_pool = undefined) {
 	f = url_params.get("f") ?? "geojson";
 	if(!(f.toLowerCase()==="latlon" || f.toLowerCase()==="latlondir")){
 		url_params.set("f","wkt");// geojson is default
 	}
-
 
 	let url_to_fetch = "/?" + url_params.toString();
 
@@ -130,28 +140,6 @@ async function add_features(url_params, fetch_pool = undefined) {
 		.then(response => response.text())
 		.then(response_text => {
 
-
-			// let json_features;
-			// try {
-			// 	json_features = JSON.parse(response_text);
-			// } catch (e) {
-			// 	throw new Error(`Unable parse response: ${e.message}\n${response_text}`);
-			// }
-
-			// if (json_features?.geometry?.type == "MultiPoint" && f=="latlon"){
-			// 	// handle the wierd case where the latlon option averages the resulting point position into a single point.
-			// 	let average_x = 0;
-			// 	let average_y = 0;
-			// 	for(item of json_features.geometry.coordinates){
-			// 		average_x+=item[0]
-			// 		average_y+=item[1]
-			// 	}
-			// 	average_x /= json_features.geometry.coordinates.length
-			// 	average_y /= json_features.geometry.coordinates.length
-			// 	json_features = {type:"Feature",geometry:{type:"Point",coordinates:[average_x, average_y]}}
-			// }
-			// let read_features = new ol.format.GeoJSON({ featureProjection, dataProjection }).readFeatures(json_features);
-			
 			if(f.toLowerCase()==="latlon"){
 				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(
 					response_text.split(",").map(parseFloat).reverse()
@@ -173,58 +161,21 @@ async function add_features(url_params, fetch_pool = undefined) {
 		});
 }
 
-function zoom_to_loaded_features() {
-	let target_extent = layer_geojson.getSource().getExtent();
-	let resolution = view.getResolutionForExtent(target_extent);
-	let target_zoom = view.getZoomForResolution(resolution) / 1.01;
-	let target_center = ol.extent.getCenter(target_extent);
 
-	view.animate({
-		zoom: target_zoom,
-		center: target_center,
-		duration: 1500,
-		easing: ol.easing.easeOut
-	});
-}
 
-function radio_update(e) {
-	set_background(e.target.value);
-}
 
-function set_background(val) {
-	try {
-		map.removeLayer(layer_osm)
-		map.removeLayer(layer_skyview_tiles)
-		map.removeLayer(layer_metro_map)
-
-		switch (val) {
-			case "openstreetmap":
-				map.getLayers().insertAt(0, layer_osm)
-				break
-			case "metromap":
-				map.getLayers().insertAt(0, layer_metro_map)
-				break
-			case "skyview":
-				map.getLayers().insertAt(0, layer_skyview_tiles)
-				break
-		}
-	} catch (e) {
-		console.log(e)
-		alert("Error loading layer. Reverting to Open Street Maps.");
-		map.removeLayer(layer_osm);
-		map.getLayers().insertAt(0, layer_osm);
-	}
-}
+////////////////////////////////////////
+// Demo that sends heaps of requests
+////////////////////////////////////////
 
 
 let demo_tour = [
-	{ road: "H001", slk_from: 0, slk_to: 50, step: 0.1 }, // 500 features
-	{ road: "H005", slk_from: 0, slk_to: 500, step: 1 }, // 500 features
-	{ road: "H016", slk_from: 0, slk_to: 20, step: 0.01 }, // 2000 features
-	{ road: "H015", slk_from: 0, slk_to: 20, step: 0.01 }, // 2000 features
-	{ road: "H023", slk_from: 0, slk_to: 15, step: 0.01 }, // 1500 features
+	{ road: "H001", slk_from: 0, slk_to:  50, step: 0.1  }, // 500 features
+	{ road: "H005", slk_from: 0, slk_to: 500, step: 1    }, // 500 features
+	{ road: "H016", slk_from: 0, slk_to:  20, step: 0.01 }, // 2000 features
+	{ road: "H015", slk_from: 0, slk_to:  20, step: 0.01 }, // 2000 features
+	{ road: "H023", slk_from: 0, slk_to:  15, step: 0.01 }, // 1500 features
 ]
-
 
 function run_demo() {
 	let fetch_pool = new Fetch_Queue(200);
@@ -247,6 +198,9 @@ function run_demo() {
 	fetch_pool.then(arr => zoom_to_loaded_features());
 }
 
+////////////////////////////////////////
+// Demo that sends batch requests
+////////////////////////////////////////
 
 let demo_tour_batch = [
 	{ road: "H002", slk_from: 0, slk_to: 50, step: 0.1 }, // 500 features
@@ -324,20 +278,21 @@ function fetch_batch() {
 	});
 	Promise.all(fetches).then(()=>{
 		zoom_to_loaded_features()
-
 	});
 }
 
-
+////////////////////////////////////////
+// Binary encoder for batch requests
+////////////////////////////////////////
 
 let CWY = {
-	L: 0b0000_0100,
-	R: 0b0000_0001,
-	S: 0b0000_0010,
-	LR: 0b0000_0101,
-	LS: 0b0000_0110,
-	RS: 0b0000_0011,
-	LRS: 0b0000_0111
+	L:   0b0000_0100,
+	R:   0b0000_0001,
+	S:   0b0000_0010,
+	LR:  0b0000_0101,
+	LS:  0b0000_0110,
+	RS:  0b0000_0011,
+	LRS: 0b0000_0111,
 }
 /** Encodes a request into an ArrayBuffer as follows:
  * 	
