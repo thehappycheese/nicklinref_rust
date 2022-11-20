@@ -106,7 +106,7 @@ A work-in-progress and there is no compiled visual ready for distribution.
 
 If everything goes to plan, this visual might be better than IconMap:
 
-![screenshot](https://github.com/thehappycheese/powerbi-visual-geojson-map-1/raw/main/git_docs/hero_image.jpg)
+![screenshot](readme_extras/hero_image.jpg)
 
 > **Note:** the `live` branch of this project uses the new `/batch/`
 > feature described below to _dynamically_ georeference the data, so that
