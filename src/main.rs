@@ -96,7 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let no_path = 
 		warp::get()
-		//.and(warp::path::end())
+		//.and(warp::path::end())  // TODO: this was removed for some obscure frustrating reason that I don't remember
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()));
 
@@ -138,27 +138,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.and(warp::body::bytes())
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()))
-		.and_then(|body:bytes::Bytes, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
-			
-			
-			let batch_query = QueryParameterBatch::try_from(body).or(Err(warp::reject::custom(BasicErrorWarp::new("Unable to parse query parameters"))))?;
-
-			// TODO: could add some intelligence here... repeated lookups in the hash map can be avoided when multiple queries have the same road number and cwy.
-			let f = batch_query.0
+		.and_then(|body:bytes::Bytes, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move {
+			QueryParameterBatch::try_from(body).map_err(|_|
+				warp::reject::custom(BasicErrorWarp::new("Unable to parse batch query parameters"))
+			).map(|batch_query|
+				batch_query
+				.0
 				.iter()
 				.map(|query| match get_linestring(query, &data, &data_index){
 					Ok(x)=>x,
 					Err(_)=>"null".to_string()
 				})
 				.collect::<Vec<String>>()
-				.join(",");
-			
-			if false{
-			 	return Err(warp::reject::custom(BasicErrorWarp::new("to make the typechecker happy")))
-			}
-
-			Ok(
-				"[".to_string() + &f + "]"
+				.join(",")
+			).map(|result_string|
+				format!("[{}]", result_string)
 			)
 		});
 
