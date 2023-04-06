@@ -1,8 +1,8 @@
 [package]
 name = "nicklinref"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["thehappycheese"]
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 repository = "https://github.com/thehappycheese/nicklinref_rust"
 
