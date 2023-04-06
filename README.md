@@ -24,10 +24,13 @@
   - [4.6. Usage - Coordinate Reference System (CRS)](#46-usage---coordinate-reference-system-crs)
 - [5. Roadmap / Future Features](#5-roadmap--future-features)
 - [6. Compiling this code for your platform](#6-compiling-this-code-for-your-platform)
-  - [6.1. Ubuntu](#61-ubuntu)
-- [7. Related Projects](#7-related-projects)
-  - [7.1. Python version (Predecessor to this Rust version)](#71-python-version-predecessor-to-this-rust-version)
-  - [7.2. Megalinref (Successor / Sibling to this Repo)](#72-megalinref-successor--sibling-to-this-repo)
+  - [6.1. Ubuntu / Debian](#61-ubuntu--debian)
+  - [6.2. Windows](#62-windows)
+- [7. Deploying the server](#7-deploying-the-server)
+  - [7.1. Amazon Lightsail](#71-amazon-lightsail)
+- [8. Related Projects](#8-related-projects)
+  - [8.1. Python version (Predecessor to this Rust version)](#81-python-version-predecessor-to-this-rust-version)
+  - [8.2. Megalinref (Successor / Sibling to this Repo)](#82-megalinref-successor--sibling-to-this-repo)
 
 ## 1. Introduction
 
@@ -463,25 +466,141 @@ that there are about `111320` metres per degree.
 
 ## 6. Compiling this code for your platform
 
-### 6.1. Ubuntu
+### 6.1. Ubuntu / Debian
+
+Install required packages:
 
 ```bash
 sudo apt update
 sudo apt-get install build-essential libssl-dev pkg-config git
+```
+
+> Note: on some linux distros, the packages `libssl-dev` and `build-essential` may have different names. `build-essential` contains the `libc` package which is needed by some rust packages to interact with other platform code.
+
+Install Rust:
+
+Follow the this guide <https://www.rust-lang.org/tools/install>
+Probably something like this:
+
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source “$HOME/.cargo/env”
+source "$HOME/.cargo/env"
+```
+
+Clone this repository
+
+```bash
 git clone https://github.com/thehappycheese/nicklinref_rust
 cd nicklinref_rust
-# optional
-# Delete cargo lockfile to avoid problems with old rust-openssl failing to detect the openssl binaries and headers
-rm Cargo.lock
-# end optional
+```
+
+Build and run:
+
+```bash
 cargo run --release
 ```
 
-## 7. Related Projects
+Optionally delete the cargo lockfile to avoid problems with old rust-openssl failing to detect the openssl binaries and headers. Skip this step if possible.
 
-### 7.1. Python version (Predecessor to this Rust version)
+```bash
+rm Cargo.lock
+cargo run --release
+```
+
+### 6.2. Windows
+
+Install rust: <https://www.rust-lang.org/tools/install>.
+You may be prompted to install some microsoft visual C++ thing which is used for linking native executables.
+
+Clone this repository
+
+```bash
+git clone https://github.com/thehappycheese/nicklinref_rust
+cd nicklinref_rust
+```
+
+Build and run:
+
+```bash
+cargo run --release
+```
+
+## 7. Deploying the server
+
+### 7.1. Amazon Lightsail
+
+1. Start a node.js lightsail instance (this is an image prepared by bitnami)
+2. Create a static IP, and register a domain
+3. SSH into the terminal
+4. Follow the guides above to build niklinref_rust
+5. Create `/etc/systemd/system/linref.service` it should look something like;
+
+```service
+[Unit]
+Description=linref
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+Environment=NLR_ADDR=0.0.0.0
+Environment=NLR_PORT=3099
+WorkingDirectory=/home/git/nicklinref_rust
+ExecStart=/home/git/nicklinref_rust/target/release/nicklinref
+
+[Install]
+WantedBy=multi-user.target
+```
+
+6. Enable the service to make it run on boot, and start it now;
+
+```bash
+systemctl enable linref.service
+systemctl start linref.service
+```
+
+1. Follow a guide to create a vhost file at `/opt/bitnami/apache/conf/linref-vhost.conf` <https://docs.bitnami.com/virtual-machine/infrastructure/lamp/configuration/configure-custom-application/>
+
+2. Follow a guide to set up letsencrypt <https://docs.bitnami.com/aws/faq/administration/generate-configure-certificate-letsencrypt/>
+
+3. Add some stuff to the conf to enable CORS.
+
+> Note: The last 3 steps are painful and tedious due to awful documentation. To
+> complicate matters the letsencrypt script adds a heap of extra sections to the
+> .conf file. Overall its an awful experience and I would recommend avoiding the
+> use of bitnami / apache as a reverse proxy.
+
+Below is roughly what the conf file should look like;
+
+```conf
+#opt/bitnami/apache/conf/linref-vhost.conf
+<VirtualHost *:80>
+  ServerName linref.{yourdomain}.com
+  ProxyPass / http://localhost:3099/
+  ProxyPassReverse / http://localhost:3099/
+  # ...
+</VirtualHost>
+<VirtualHost *:443>
+  ServerName linref.{yourdomain}.com
+  #...
+  # Some junk added to enable strict CORS. Note that this is almost certainly
+  # the wrong way to do this, some of these headers will be sent when they
+  # should not be.
+  Header always set Access-Control-Allow-Origin %{ORIGIN}e env=ORIGIN
+  Header always set Access-Control-Allow-Headers "Origin, Content-Type, Referrer-Policy, Access-Control-Allow-Headers, Access-Control-Request-Method, Access-Control-Request-Headers"
+  RewriteEngine On
+  RewriteCond %{REQUEST_METHOD} OPTIONS
+  RewriteRule ^(.*)$ $1 [R=200,L]
+  # ...
+  ProxyPass / http://localhost:3099/
+  ProxyPassReverse / http://localhost:3099/
+  # ...
+</VirtualHost>
+```
+
+## 8. Related Projects
+
+### 8.1. Python version (Predecessor to this Rust version)
 
 This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>
@@ -499,7 +618,7 @@ future. Reasons below:
 | Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform. On Debian you may need to run `apt-get install libssl-dev`. I've never had issues compiling on windows but I have only done that on one machine.                                                                                                                                                                                                                                 |
 | Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar. I don't know how to make containers that can go to sleep without unloading nicklinref from RAM. |
 
-### 7.2. Megalinref (Successor / Sibling to this Repo)
+### 8.2. Megalinref (Successor / Sibling to this Repo)
 
 Please see the succesor project I am working on <https://github.com/thehappycheese/megalinref> ; 
 its a rust-powered python library that will do all the same things as this library, but without the
