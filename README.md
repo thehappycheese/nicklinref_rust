@@ -5,12 +5,13 @@
 
 - [1. Introduction](#1-introduction)
   - [1.1. Purpose](#11-purpose)
-  - [1.2. Doesn't this already exist?](#12-doesnt-this-already-exist)
-  - [1.3. But What For? (PowerBI Visuals)](#13-but-what-for-powerbi-visuals)
-    - [1.3.1. Icon Map](#131-icon-map)
-    - [1.3.2. NickMap (My Custom Visual)](#132-nickmap-my-custom-visual)
-- [2. SLK vs. Chainage vs. True Distance](#2-slk-vs-chainage-vs-true-distance)
-- [3. Local Government Roads](#3-local-government-roads)
+- [2. What For](#2-what-for)
+  - [2.1. Icon Map](#21-icon-map)
+  - [2.2. NickMap (My Custom Visual)](#22-nickmap-my-custom-visual)
+- [3. Notes](#3-notes)
+  - [3.1. SLK, True Distance and Chainage](#31-slk-true-distance-and-chainage)
+  - [3.2. Local Government Roads](#32-local-government-roads)
+  - [3.3. Principal Shared Paths (PSPs) (State Owned Paths)](#33-principal-shared-paths-psps-state-owned-paths)
 - [4. Usage](#4-usage)
   - [4.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#41-normal-usage---text-response-geojson--wkt--json--latlon)
     - [4.1.1. Example - Get a MultiLineString in WKT](#411-example---get-a-multilinestring-in-wkt)
@@ -22,9 +23,11 @@
   - [4.5. Usage - Data Download and Refresh](#45-usage---data-download-and-refresh)
   - [4.6. Usage - Coordinate Reference System (CRS)](#46-usage---coordinate-reference-system-crs)
 - [5. Roadmap / Future Features](#5-roadmap--future-features)
-- [6. Related Projects](#6-related-projects)
-  - [6.1. Python version (Predecessor to this Rust version)](#61-python-version-predecessor-to-this-rust-version)
-  - [6.2. Megalinref (Successor / Sibling to this Repo)](#62-megalinref-successor--sibling-to-this-repo)
+- [6. Compiling this code for your platform](#6-compiling-this-code-for-your-platform)
+  - [6.1. Ubuntu](#61-ubuntu)
+- [7. Related Projects](#7-related-projects)
+  - [7.1. Python version (Predecessor to this Rust version)](#71-python-version-predecessor-to-this-rust-version)
+  - [7.2. Megalinref (Successor / Sibling to this Repo)](#72-megalinref-successor--sibling-to-this-repo)
 
 ## 1. Introduction
 
@@ -48,7 +51,9 @@ the parameters `cwy` and `offset` can be used to select one or more
 carriageway(s), and/or offset the resulting geometry. The `&f=WKT` can be added
 to get WKT instead of the default GeoJSON output.
 
-### 1.2. Doesn't this already exist?
+<details>
+
+<summary>Doesn't this already exist? (Click here to expand this section)</summary>
 
 This software is different from the from the 'Web Services' / APIs already available at
 <https://data.wa.gov.au> because it properly truncates the geometry at the
@@ -83,20 +88,23 @@ anyway, or be more convenient:
   input format. This is much more suitable for interfacing directly with PowerBI
   visuals.
 
-### 1.3. But What For? (PowerBI Visuals)
+</details>
+
+
+## 2. What For
 
 This application can be conveniently used from Excel using the
 `=WEBSERVICE(...)` formula or from PowerBI using the `=Web.Contents(...)`
 function to augment any table of data with a geometry column. This can then be
 used to visualise the data in Power BI.
 
-#### 1.3.1. Icon Map
+### 2.1. Icon Map
 
 IconMap can be used with any table of data containing a column consisting of
 WKT. <https://icon-map.com/> IconMap is an excellent visual which is finished
 and polished and is easy to download and use.
 
-#### 1.3.2. NickMap (My Custom Visual)
+### 2.2. NickMap (My Custom Visual)
 
 > Note: the url below is broken for the time being.
 
@@ -114,29 +122,36 @@ If everything goes to plan, this visual might be better than IconMap:
 
 ![Live Georeferencing field wells](./readme_extras/live_georeferencing.jpg)
 
-## 2. SLK vs. Chainage vs. True Distance
+## 3. Notes
+
+### 3.1. SLK, True Distance and Chainage
 
 SLK stands for "Straight Line Kilometre" and is sometimes called 'chainage' or
 'kilometrage' in other contexts.
 
 At Main Roads Western Australia SLK refers to an "adjusted" linear measure which
-has discontinuities called 'Points of Equation' (~100 of them throughout the
-state road network) where there is an abrupt increase or decrease in SLK. This
-is done so that when asset locations are recorded by SLK, these records are not
-invalidated when a road realignment project modifies the length of a road.
+has discontinuities called 'Points of Equation' (there are between 100 and 200
+points of equation throughout the state road network) where there is an abrupt
+increase or decrease in SLK. This is done so that when asset locations are
+recorded by SLK, these records are not invalidated when a road realignment
+project modifies the length of a road.
 
 This software has no special compensation to handle POE discontinuities. Please
 expect results at POEs to have gaps or overlaps.
 
 The non-adjusted linear measure is called "True Distance".
 
-This software is only capable of looking up Lat/Lon from SLK. Perhaps in the
-future there will be an additional feature to look up Lat/Lon from True
-Distance.
+This software is only capable of looking up Lat/Lon from SLK. True distance is
+not yet supported.
 
-## 3. Local Government Roads
+### 3.2. Local Government Roads
 
 Local government roads are supported.
+
+### 3.3. Principal Shared Paths (PSPs) (State Owned Paths)
+
+PSPs are are supported.
+
 
 ## 4. Usage
 
@@ -444,10 +459,29 @@ that there are about `111320` metres per degree.
 - `f=latlon` averages multiple point results into a single point.
   - Make a way to optionally do this when fetching points in `wkt`, `geojson` and `json` modes.
 - Modify `/batch/` mode to accept both linestring and point queries at the same time
+- Allow lookup using `true`, or `true_from` and `true_to`
 
-## 6. Related Projects
+## 6. Compiling this code for your platform
 
-### 6.1. Python version (Predecessor to this Rust version)
+### 6.1. Ubuntu
+
+```bash
+sudo apt update
+sudo apt-get install build-essential libssl-dev pkg-config git
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source “$HOME/.cargo/env”
+git clone https://github.com/thehappycheese/nicklinref_rust
+cd nicklinref_rust
+# optional
+# Delete cargo lockfile to avoid problems with old rust-openssl failing to detect the openssl binaries and headers
+rm Cargo.lock
+# end optional
+cargo run --release
+```
+
+## 7. Related Projects
+
+### 7.1. Python version (Predecessor to this Rust version)
 
 This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>
@@ -465,7 +499,7 @@ future. Reasons below:
 | Dependencies | Depends on geopandas therefore it actually requires a 1GB+ stack of packages required by geopandas. On windows a simple `pip install` doesn't even work since pre-compiled binaries are required for pandas and shapely. | Needs to be compiled for the target platform. On Debian you may need to run `apt-get install libssl-dev`. I've never had issues compiling on windows but I have only done that on one machine.                                                                                                                                                                                                                                 |
 | Deployment   | Requires a lot of setup to run in cloud environment... heavy resource requirements                                                                                                                                       | Using multi stage docker build it could probably be squished into a container that is about 50Mb in size. It shares some problems with the python version; it is slow to start, and expects to be always-running. This always running problem forfeits the possible cost benefits of running it on Azure Functions or similar. I don't know how to make containers that can go to sleep without unloading nicklinref from RAM. |
 
-### 6.2. Megalinref (Successor / Sibling to this Repo)
+### 7.2. Megalinref (Successor / Sibling to this Repo)
 
 Please see the succesor project I am working on <https://github.com/thehappycheese/megalinref> ; 
 its a rust-powered python library that will do all the same things as this library, but without the
