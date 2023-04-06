@@ -162,11 +162,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		route_show
 		.or(no_path_lines)
 		.or(no_path_points)
-		.or(route_batch)
-		.with(
-			warp::cors()
-			.allow_any_origin() 
-		);
+		.or(route_batch);
+		// .with(
+		// 	warp::cors()
+		// 	.allow_any_origin() 
+		// );
 
 	
 	let address = settings.get_socket_address();
