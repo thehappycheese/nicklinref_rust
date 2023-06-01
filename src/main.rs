@@ -20,7 +20,6 @@ use settings::Settings;
 
 use update_data::{update_data, load_data, perform_analysis, LookupMap};
 use esri_serde::{LayerSaved};
-use basic_error::BasicErrorWarp;
 use query_parameters::{ QueryParameterBatch};
 use geoprocessing::{get_linestring, get_points, get_linestring_m};
 //use echo_header::{echo_header_x_request_id};
@@ -72,8 +71,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
 
 
-	//let to_builder = warp::any().map(|| Response::builder());
 
+	//
 	let echo_x_request_id =
 		warp::any()
 		.and(warp::header::optional::<u64>("x-request-id"))
@@ -103,11 +102,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		route_get_query.clone()
 		.and(warp::query())
 		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| {
-			//request_id:Option<u64>,
-			// let resp = Response::builder();
-			// if let Some(request_id) = request_id{
-			// 	resp.header("x-request-id", format!("{}", request_id));
-			// }
 			if query.m {
 				match get_linestring_m(&query, &data, &data_index){
 					Ok(s)=>response_builder.status(200).body(s),
@@ -140,59 +134,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let route_post_query = 
 		warp::post()
 		.and(warp::path("batch"))
-		//.and(echo_x_request_id)
+		.and(echo_x_request_id)
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()))
 		.and(warp::body::bytes());
 	
 	// Batch Line Geometry is requested
-	// let route_lines_batch_query = 
-	// 	route_post_query.clone()
-	// 	.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| {
-	// 		QueryParameterBatch::try_from(body).map_err(|_|
-	// 			response_builder.status(400).body("Unable to parse batch query parameters".to_owned())
-	// 		).map(|batch_query|
-	// 			batch_query
-	// 			.0
-	// 			.iter()
-	// 			.map(|query| match get_linestring(query, &data, &data_index){
-	// 				Ok(x)=>x,
-	// 				Err(_)=>"null".to_string()
-	// 			})
-	// 			.collect::<Vec<String>>()
-	// 			.join(",")
-	// 		).map(|result_string|
-	// 			response_builder.status(200).body(format!("[{}]", result_string))
-	// 		)
-	// 	});
-
 	let route_lines_batch_query = 
 		route_post_query.clone()
-		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| async move{
-			QueryParameterBatch::try_from(body).map_err(|_|
-				warp::reject::custom(BasicErrorWarp::new("Unable to parse batch query parameters"))
-			).map(|batch_query|
-				batch_query
-				.0
-				.iter()
-				.map(|query| match get_linestring(query, &data, &data_index){
-					Ok(x)=>x,
-					Err(_)=>"null".to_string()
-				})
-				.collect::<Vec<String>>()
-				.join(",")
-			).map(|result_string|
-				format!("[{}]", result_string)
-			)
+		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| {
+			if let Ok(batch_query) = QueryParameterBatch::try_from(body){
+				let result_string = batch_query
+					.0
+					.iter()
+					.map(|query| match get_linestring(query, &data, &data_index){
+						Ok(x)=>x,
+						Err(_)=>"null".to_string()
+					})
+					.collect::<Vec<String>>()
+					.join(",");
+				response_builder.status(200).body(format!("[{}]", result_string))
+			}else{
+				response_builder.status(400).body("Unable to parse batch query parameters".to_owned())
+			}
 		});
 
 	let filter = 
 		route_show
 		.or(route_lines_query)
 		.or(route_points_query)
-		.or(route_lines_batch_query)
-		//.map(|result_builder:Option<Response<String>>|result_builder.unwrap())
-		.with(warp::compression::gzip());
+		.or(route_lines_batch_query.with(warp::compression::gzip()));
+		
 	
 	let address = settings.get_socket_address();
 	println!("Serving at {:?}", address);
