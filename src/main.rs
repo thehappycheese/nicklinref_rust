@@ -12,6 +12,7 @@ use std::{convert::TryFrom};
 use std::sync::Arc;
 use std::convert::Infallible;
 
+use warp::http::response::Builder;
 use warp::{Filter, http::Response};
 use bytes;
 use settings::Settings;
@@ -71,7 +72,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
 
 
-	//let header_response_builder = warp::any().and(warp::header::optional::<u64>("x-request-id"));
+	//let to_builder = warp::any().map(|| Response::builder());
+
+	let echo_x_request_id =
+		warp::any()
+		.and(warp::header::optional::<u64>("x-request-id"))
+		.map(|request_id:Option<u64>| {
+			let resp = Response::builder();
+			if let Some(request_id) = request_id {
+				resp.header("x-request-id", format!("{}", request_id))
+			}else{
+				resp
+			}
+		});
+
 
 	// generic query base
 	// ignores path
@@ -80,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	//       static file route for obscure and frustrating reasons
 	let route_get_query = 
 		warp::get()
-		//and(header_response_builder)
+		.and(echo_x_request_id)
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()));
 
@@ -88,7 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let route_lines_query = 
 		route_get_query.clone()
 		.and(warp::query())
-		.and_then(| data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| async move{
+		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| {
 			//request_id:Option<u64>,
 			// let resp = Response::builder();
 			// if let Some(request_id) = request_id{
@@ -96,13 +110,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			// }
 			if query.m {
 				match get_linestring_m(&query, &data, &data_index){
-					Ok(s)=>Ok(s),
-					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e))),
+					Ok(s)=>response_builder.status(200).body(s),
+					Err(e)=>response_builder.status(500).body(format!("{}", e)),
 				}
 			}else{
 				match get_linestring(&query, &data, &data_index){
-					Ok(s)=>Ok(s),
-					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+					Ok(s)=>response_builder.status(200).body(s),
+					Err(e)=>response_builder.status(500).body(format!("{}", e)),
 				}
 			}
 		});
@@ -111,10 +125,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let route_points_query = 
 		route_get_query.clone()
 		.and(warp::query())
-		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| async move{
+		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| {
 			match get_points(&query, &data, &data_index){
-				Ok(s) => Ok(s),
-				Err(e)  => Err(warp::reject::custom(BasicErrorWarp::new(e)))
+				Ok(s) => response_builder.status(200).body(s),
+				Err(e)  => response_builder.status(500).body(format!("{}", e)),
 			}
 		});
 
@@ -126,14 +140,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let route_post_query = 
 		warp::post()
 		.and(warp::path("batch"))
+		//.and(echo_x_request_id)
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()))
 		.and(warp::body::bytes());
 	
 	// Batch Line Geometry is requested
+	// let route_lines_batch_query = 
+	// 	route_post_query.clone()
+	// 	.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| {
+	// 		QueryParameterBatch::try_from(body).map_err(|_|
+	// 			response_builder.status(400).body("Unable to parse batch query parameters".to_owned())
+	// 		).map(|batch_query|
+	// 			batch_query
+	// 			.0
+	// 			.iter()
+	// 			.map(|query| match get_linestring(query, &data, &data_index){
+	// 				Ok(x)=>x,
+	// 				Err(_)=>"null".to_string()
+	// 			})
+	// 			.collect::<Vec<String>>()
+	// 			.join(",")
+	// 		).map(|result_string|
+	// 			response_builder.status(200).body(format!("[{}]", result_string))
+	// 		)
+	// 	});
+
 	let route_lines_batch_query = 
 		route_post_query.clone()
-		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| async move {
+		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| async move{
 			QueryParameterBatch::try_from(body).map_err(|_|
 				warp::reject::custom(BasicErrorWarp::new("Unable to parse batch query parameters"))
 			).map(|batch_query|
@@ -156,6 +191,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.or(route_lines_query)
 		.or(route_points_query)
 		.or(route_lines_batch_query)
+		//.map(|result_builder:Option<Response<String>>|result_builder.unwrap())
 		.with(warp::compression::gzip());
 	
 	let address = settings.get_socket_address();

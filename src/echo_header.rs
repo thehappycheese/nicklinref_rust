@@ -14,9 +14,10 @@ where
     warp::any()
         .and(filter)
         .and(warp::header::<i64>("x-request-id"))
-        .map(|something, id:i64|{
+        .map(|something:warp::Reply /*???*/, id:i64|{
+            // inject the header???
             todo!()
-        }).recover(|seomething|something)
+        }).recover(|something|something)
 }
 
 
