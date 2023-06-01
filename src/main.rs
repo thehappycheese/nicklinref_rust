@@ -5,25 +5,27 @@ mod basic_error;
 mod query_parameters;
 mod unit_conversion;
 mod geoprocessing;
+//mod echo_header;
+
 
 use std::{convert::TryFrom};
 use std::sync::Arc;
 use std::convert::Infallible;
 
-use warp::Filter;
+use warp::http::response::Builder;
+use warp::{Filter, http::Response};
 use bytes;
 use settings::Settings;
 
 
 use update_data::{update_data, load_data, perform_analysis, LookupMap};
+use esri_serde::{LayerSaved};
 use query_parameters::{ QueryParameterBatch};
 use geoprocessing::{get_linestring, get_points, get_linestring_m};
-use esri_serde::{LayerSaved};
-use basic_error::BasicErrorWarp;
+//use echo_header::{echo_header_x_request_id};
+
 
 use crate::query_parameters::{QueryParametersLine, QueryParametersPoint};
-
-
 
 /// Moves a clone of an Arc<T> into a warp filter chain.
 /// The closure here takes ownership of the first clone, 
@@ -39,8 +41,8 @@ where T:Send+Sync+Clone{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
 	
+	// Read settings
 	let settings:Arc<Settings> = match Settings::get(){
 		Ok(settings)=>settings,
 		Err(e)=>{
@@ -49,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		}
 	}.into();
 
-
+	// load data
 	let data:Arc<LayerSaved> = match load_data(&settings) {
 		Ok(res) => res,
 		Err(e) => {
@@ -57,124 +59,115 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			update_data(&settings).await?
 		}
 	}.into();
-
-
 	println!("Loaded {} features.", data.features.len());
 
-
+	// index data for fast lookup
 	let data_index:Arc<LookupMap> =  perform_analysis(data.clone())?.into();
-	
-	
 	println!("Indexing complete.");
 
-
-	// let route_line = 
-	// 	warp::get()
-	// 	.and(warp::path("lines"))
-	// 	.and(warp::query())
-	// 	.and(clone_arc(data.clone()))
-	// 	.and(clone_arc(data_index.clone()))
-	// 	.and_then(|query:QueryParametersLine, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
-	// 		match get_linestring(&query, &data, &data_index){
-	// 			Ok(s)=>Ok(s),
-	// 			Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-	// 		}
-	// 	});
-	
-	// let route_points = 
-	// 	warp::get()
-	// 	.and(warp::path("points"))
-	// 	.and(warp::query())
-	// 	.and(clone_arc(data.clone()))
-	// 	.and(clone_arc(data_index.clone()))
-	// 	.and_then(|query:QueryParametersPoint, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
-	// 		match get_points(&query, &data, &data_index){
-	// 			Ok(s)=>Ok(s),
-	// 			Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-	// 		}
-	// 	});
-
-	let no_path = 
-		warp::get()
-		//.and(warp::path::end())  // TODO: this was removed for some obscure frustrating reason that I don't remember
-		.and(clone_arc(data.clone()))
-		.and(clone_arc(data_index.clone()));
-
-	let no_path_lines = 
-		no_path.clone()
-		.and(warp::query())
-		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| async move{
-			if query.m {
-				match get_linestring_m(&query, &data, &data_index){
-					Ok(s)=>Ok(s),
-					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-				}
-			}else{
-				match get_linestring(&query, &data, &data_index){
-					Ok(s)=>Ok(s),
-					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-				}
-			}
-		});
-
-	let no_path_points = 
-		no_path
-		.and(warp::query())
-		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| async move{
-			match get_points(&query, &data, &data_index){
-				Ok(s)=>Ok(s),
-				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-			}
-		});
-	
+	// Serve static HTML/js directory
 	let route_show = 
 		warp::path("show")
 		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
 
-	
-	let route_batch = 
-		warp::post()
-		.and(warp::path("batch"))
-		.and(warp::body::bytes())
-		.and(clone_arc(data.clone()))
-		.and(clone_arc(data_index.clone()))
-		.and_then(|body:bytes::Bytes, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move {
-			QueryParameterBatch::try_from(body).map_err(|_|
-				warp::reject::custom(BasicErrorWarp::new("Unable to parse batch query parameters"))
-			).map(|batch_query|
-				batch_query
-				.0
-				.iter()
-				.map(|query| match get_linestring(query, &data, &data_index){
-					Ok(x)=>x,
-					Err(_)=>"null".to_string()
-				})
-				.collect::<Vec<String>>()
-				.join(",")
-			).map(|result_string|
-				format!("[{}]", result_string)
-			)
+
+
+	//
+	let echo_x_request_id =
+		warp::any()
+		.and(warp::header::optional::<u64>("x-request-id"))
+		.map(|request_id:Option<u64>| {
+			let resp = Response::builder();
+			if let Some(request_id) = request_id {
+				resp.header("x-request-id", format!("{}", request_id))
+			}else{
+				resp
+			}
 		});
 
+
+	// generic query base
+	// ignores path
+	// note: previous versions included `.and(warp::path::end())`
+	//       but this was removed as it conflicted with the
+	//       static file route for obscure and frustrating reasons
+	let route_get_query = 
+		warp::get()
+		.and(echo_x_request_id)
+		.and(clone_arc(data.clone()))
+		.and(clone_arc(data_index.clone()));
+
+	// Line geometry is requested
+	let route_lines_query = 
+		route_get_query.clone()
+		.and(warp::query())
+		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| {
+			if query.m {
+				match get_linestring_m(&query, &data, &data_index){
+					Ok(s)=>response_builder.status(200).body(s),
+					Err(e)=>response_builder.status(500).body(format!("{}", e)),
+				}
+			}else{
+				match get_linestring(&query, &data, &data_index){
+					Ok(s)=>response_builder.status(200).body(s),
+					Err(e)=>response_builder.status(500).body(format!("{}", e)),
+				}
+			}
+		});
+
+	// Point geometry is requested
+	let route_points_query = 
+		route_get_query.clone()
+		.and(warp::query())
+		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| {
+			match get_points(&query, &data, &data_index){
+				Ok(s) => response_builder.status(200).body(s),
+				Err(e)  => response_builder.status(500).body(format!("{}", e)),
+			}
+		});
+
+	// generic POST query base
+	// requires path /batch,
+	// extracts request body as bytes
+	// TODO: probably should include `.and(warp::path::end())`
+	//       to reject requests with invalid paths
+	let route_post_query = 
+		warp::post()
+		.and(warp::path("batch"))
+		.and(echo_x_request_id)
+		.and(clone_arc(data.clone()))
+		.and(clone_arc(data_index.clone()))
+		.and(warp::body::bytes());
 	
-	
+	// Batch Line Geometry is requested
+	let route_lines_batch_query = 
+		route_post_query.clone()
+		.map(|response_builder:Builder, data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| {
+			if let Ok(batch_query) = QueryParameterBatch::try_from(body){
+				let result_string = batch_query
+					.0
+					.iter()
+					.map(|query| match get_linestring(query, &data, &data_index){
+						Ok(x)=>x,
+						Err(_)=>"null".to_string()
+					})
+					.collect::<Vec<String>>()
+					.join(",");
+				response_builder.status(200).body(format!("[{}]", result_string))
+			}else{
+				response_builder.status(400).body("Unable to parse batch query parameters".to_owned())
+			}
+		});
+
 	let filter = 
 		route_show
-		.or(no_path_lines)
-		.or(no_path_points)
-		.or(route_batch);
-		// .with(
-		// 	warp::cors()
-		// 	.allow_any_origin() 
-		// );
-
+		.or(route_lines_query)
+		.or(route_points_query)
+		.or(route_lines_batch_query.with(warp::compression::gzip()));
+		
 	
 	let address = settings.get_socket_address();
 	println!("Serving at {:?}", address);
 	warp::serve(filter).run(address).await;
-	
 	Ok(())
 }
-
-
-
