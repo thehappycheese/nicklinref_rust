@@ -72,14 +72,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
 
-	//
+	// Allow users to track their requests
 	let echo_x_request_id =
 		warp::any()
-		.and(warp::header::optional::<u64>("x-request-id"))
-		.map(|request_id:Option<u64>| {
+		.and(warp::header::optional::<String>("x-request-id"))
+		.map(|request_id:Option<String>| {
 			let resp = Response::builder();
 			if let Some(request_id) = request_id {
-				resp.header("x-request-id", format!("{}", request_id))
+				if let Ok(_) = request_id.parse::<u64>() {
+					resp.header("x-request-id", request_id)
+				}else{
+					// if not an unsigned integer then don't echo it
+					resp
+				}
 			}else{
 				resp
 			}
