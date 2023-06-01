@@ -5,25 +5,27 @@ mod basic_error;
 mod query_parameters;
 mod unit_conversion;
 mod geoprocessing;
+//mod echo_header;
+
 
 use std::{convert::TryFrom};
 use std::sync::Arc;
 use std::convert::Infallible;
 
-use warp::Filter;
+use warp::{Filter, http::Response};
 use bytes;
 use settings::Settings;
 
 
 use update_data::{update_data, load_data, perform_analysis, LookupMap};
-use query_parameters::{ QueryParameterBatch};
-use geoprocessing::{get_linestring, get_points, get_linestring_m};
 use esri_serde::{LayerSaved};
 use basic_error::BasicErrorWarp;
+use query_parameters::{ QueryParameterBatch};
+use geoprocessing::{get_linestring, get_points, get_linestring_m};
+//use echo_header::{echo_header_x_request_id};
+
 
 use crate::query_parameters::{QueryParametersLine, QueryParametersPoint};
-
-
 
 /// Moves a clone of an Arc<T> into a warp filter chain.
 /// The closure here takes ownership of the first clone, 
@@ -39,8 +41,8 @@ where T:Send+Sync+Clone{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
 	
+	// Read settings
 	let settings:Arc<Settings> = match Settings::get(){
 		Ok(settings)=>settings,
 		Err(e)=>{
@@ -49,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		}
 	}.into();
 
-
+	// load data
 	let data:Arc<LayerSaved> = match load_data(&settings) {
 		Ok(res) => res,
 		Err(e) => {
@@ -57,57 +59,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			update_data(&settings).await?
 		}
 	}.into();
-
-
 	println!("Loaded {} features.", data.features.len());
 
-
+	// index data for fast lookup
 	let data_index:Arc<LookupMap> =  perform_analysis(data.clone())?.into();
-	
-	
 	println!("Indexing complete.");
 
+	// Serve static HTML/js directory
+	let route_show = 
+		warp::path("show")
+		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
 
-	// let route_line = 
-	// 	warp::get()
-	// 	.and(warp::path("lines"))
-	// 	.and(warp::query())
-	// 	.and(clone_arc(data.clone()))
-	// 	.and(clone_arc(data_index.clone()))
-	// 	.and_then(|query:QueryParametersLine, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
-	// 		match get_linestring(&query, &data, &data_index){
-	// 			Ok(s)=>Ok(s),
-	// 			Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-	// 		}
-	// 	});
-	
-	// let route_points = 
-	// 	warp::get()
-	// 	.and(warp::path("points"))
-	// 	.and(warp::query())
-	// 	.and(clone_arc(data.clone()))
-	// 	.and(clone_arc(data_index.clone()))
-	// 	.and_then(|query:QueryParametersPoint, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move{
-	// 		match get_points(&query, &data, &data_index){
-	// 			Ok(s)=>Ok(s),
-	// 			Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
-	// 		}
-	// 	});
 
-	let no_path = 
+	//let header_response_builder = warp::any().and(warp::header::optional::<u64>("x-request-id"));
+
+	// generic query base
+	// ignores path
+	// note: previous versions included `.and(warp::path::end())`
+	//       but this was removed as it conflicted with the
+	//       static file route for obscure and frustrating reasons
+	let route_get_query = 
 		warp::get()
-		//.and(warp::path::end())  // TODO: this was removed for some obscure frustrating reason that I don't remember
+		//and(header_response_builder)
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()));
 
-	let no_path_lines = 
-		no_path.clone()
+	// Line geometry is requested
+	let route_lines_query = 
+		route_get_query.clone()
 		.and(warp::query())
-		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| async move{
+		.and_then(| data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersLine| async move{
+			//request_id:Option<u64>,
+			// let resp = Response::builder();
+			// if let Some(request_id) = request_id{
+			// 	resp.header("x-request-id", format!("{}", request_id));
+			// }
 			if query.m {
 				match get_linestring_m(&query, &data, &data_index){
 					Ok(s)=>Ok(s),
-					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+					Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e))),
 				}
 			}else{
 				match get_linestring(&query, &data, &data_index){
@@ -117,8 +107,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			}
 		});
 
-	let no_path_points = 
-		no_path
+	// Point geometry is requested
+	let route_points_query = 
+		route_get_query.clone()
 		.and(warp::query())
 		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| async move{
 			match get_points(&query, &data, &data_index){
@@ -126,19 +117,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 				Err(e)  => Err(warp::reject::custom(BasicErrorWarp::new(e)))
 			}
 		});
-	
-	let route_show = 
-		warp::path("show")
-		.and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
 
-	
-	let route_batch = 
+	// generic POST query base
+	// requires path /batch,
+	// extracts request body as bytes
+	// TODO: probably should include `.and(warp::path::end())`
+	//       to reject requests with invalid paths
+	let route_post_query = 
 		warp::post()
 		.and(warp::path("batch"))
-		.and(warp::body::bytes())
 		.and(clone_arc(data.clone()))
 		.and(clone_arc(data_index.clone()))
-		.and_then(|body:bytes::Bytes, data:Arc<LayerSaved>, data_index:Arc<LookupMap>| async move {
+		.and(warp::body::bytes());
+	
+	// Batch Line Geometry is requested
+	let route_lines_batch_query = 
+		route_post_query.clone()
+		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, body:bytes::Bytes| async move {
 			QueryParameterBatch::try_from(body).map_err(|_|
 				warp::reject::custom(BasicErrorWarp::new("Unable to parse batch query parameters"))
 			).map(|batch_query|
@@ -156,36 +151,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			)
 		});
 
-	// This filter will help clients avoid processing out-of-order responses from the server
-	let echo_request_id_filter = warp::header::optional::<String>("x-request-id")
-		.map(|request_id: Option<String>| {
-			let mut reply = warp::reply();
-			if let Some(id) = request_id {
-				// Attempt to parse the id as an integer.
-				if id.parse::<i64>().is_ok() {
-					warp::reply::with_header(reply, "x-request-id", id);
-				}
-			}
-			reply
-		});
-	
 	let filter = 
 		route_show
-		.or(no_path_lines .and(echo_request_id_filter))
-		.or(no_path_points.and(echo_request_id_filter))
-		.or(route_batch   .and(echo_request_id_filter));
-		// .with(
-		// 	warp::cors()
-		// 	.allow_any_origin() 
-		// );
-
+		.or(route_lines_query)
+		.or(route_points_query)
+		.or(route_lines_batch_query)
+		.with(warp::compression::gzip());
 	
 	let address = settings.get_socket_address();
 	println!("Serving at {:?}", address);
 	warp::serve(filter).run(address).await;
-	
 	Ok(())
 }
-
-
-
