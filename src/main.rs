@@ -122,8 +122,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.and(warp::query())
 		.and_then(|data:Arc<LayerSaved>, data_index:Arc<LookupMap>, query:QueryParametersPoint| async move{
 			match get_points(&query, &data, &data_index){
-				Ok(s)=>Ok(s),
-				Err(e)=>Err(warp::reject::custom(BasicErrorWarp::new(e)))
+				Ok(s) => Ok(s),
+				Err(e)  => Err(warp::reject::custom(BasicErrorWarp::new(e)))
 			}
 		});
 	
@@ -156,13 +156,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			)
 		});
 
-	
+	// This filter will help clients avoid processing out-of-order responses from the server
+	let echo_request_id_filter = warp::header::optional::<String>("x-request-id")
+		.map(|request_id: Option<String>| {
+			let mut reply = warp::reply();
+			if let Some(id) = request_id {
+				// Attempt to parse the id as an integer.
+				if id.parse::<i64>().is_ok() {
+					warp::reply::with_header(reply, "x-request-id", id);
+				}
+			}
+			reply
+		});
 	
 	let filter = 
 		route_show
-		.or(no_path_lines)
-		.or(no_path_points)
-		.or(route_batch);
+		.or(no_path_lines .and(echo_request_id_filter))
+		.or(no_path_points.and(echo_request_id_filter))
+		.or(route_batch   .and(echo_request_id_filter));
 		// .with(
 		// 	warp::cors()
 		// 	.allow_any_origin() 
