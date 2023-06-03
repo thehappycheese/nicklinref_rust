@@ -1,12 +1,9 @@
 use warp::{http::HeaderValue, reply::Response, Filter, Rejection, Reply};
 
 /// Echoes back the `x-request-id` header from the request, if it is present and
-/// can be parsed as a `u64`. otherwise the response is passed on unmodified.
-///
-/// # Errors
-///
-/// If the `filter` fails to extract a `Reply`-compatible value from the request, this filter will
-/// pass on the rejection.
+/// can be parsed as a `u64`. Otherwise the response is not modified.
+/// If the header is present and valid it will be echoed even if the response
+/// from `filter` is a rejection
 ///
 /// # Example
 ///
@@ -39,6 +36,8 @@ where
         .and(filter)
         .map(move |id: Option<u64>, reply: T| {
             let mut response = reply.into_response();
+            // note response status is not checked; the header will be
+            // echo-ed even on a rejection
             if let Some(id) = id {
                 response.headers_mut().insert(HEADER, HeaderValue::from(id));
             }
