@@ -3,7 +3,7 @@
 
 
 
-let test_out_of_order_requests_requests = [
+let __test_out_of_order_requests_requests = [
 	{ id:2, road: "H018", slk_from: 0, slk_to: 30, step: 0.01 }, // 2000 features
 	{ id:4, road: "H038", slk_from: 0, slk_to: 0.5, step: 0.1 }, // 50 features
 ]
@@ -15,7 +15,7 @@ function test_out_of_order_requests() {
 	let request_batches = [];
 
 	// one request per road
-	for (item of test_out_of_order_requests_requests) {
+	for (item of __test_out_of_order_requests_requests) {
 
 		let total_byte_length = 0;
 		let request_batch_array = [];
@@ -63,4 +63,30 @@ function test_out_of_order_requests() {
 	Promise.all(fetches).then(()=>{
 		console.log("done")
 	});
+}
+
+
+async function test_invalid_x_response_id(){
+	let result = await fetch(
+		"/?road=H001&slk=10",
+		{
+			headers: {
+				"x-request-id": "invalid"
+			}
+		}
+	)
+	console.log(result)
+	console.log("Headers:", ...result.headers)
+}
+async function test_valid_x_response_id(){
+	let result = await fetch(
+		"/?road=H001&slk=10",
+		{
+			headers: {
+				"x-request-id": "255"
+			}
+		}
+	)
+	console.log(result)
+	console.log("Headers:", ...result.headers)
 }
