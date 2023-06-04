@@ -3,7 +3,7 @@
 
 
 
-let test_out_of_order_requests_requests = [
+let __test_out_of_order_requests_requests = [
 	{ id:2, road: "H018", slk_from: 0, slk_to: 30, step: 0.01 }, // 2000 features
 	{ id:4, road: "H038", slk_from: 0, slk_to: 0.5, step: 0.1 }, // 50 features
 ]
@@ -15,7 +15,7 @@ function test_out_of_order_requests() {
 	let request_batches = [];
 
 	// one request per road
-	for (item of test_out_of_order_requests_requests) {
+	for (item of __test_out_of_order_requests_requests) {
 
 		let total_byte_length = 0;
 		let request_batch_array = [];
@@ -63,4 +63,51 @@ function test_out_of_order_requests() {
 	Promise.all(fetches).then(()=>{
 		console.log("done")
 	});
+}
+
+
+async function test_invalid_x_response_id(){
+	let result = await fetch(
+		"/?road=H001&slk=10&f=wkt",
+		{
+			headers: {
+				"x-request-id": "invalid"
+			}
+		}
+	)
+	let text = await result.text()
+	console.log("Test Invalid x-request-id on Valid Request")
+	console.log("Text:", text)
+	console.log("Headers:", ...result.headers)
+	console.assert(!("x-request-id" in [...result.headers.keys()]), "x-request-id header present")
+}
+async function test_valid_x_response_id(){
+	let result = await fetch(
+		"/?road=H001&slk=10&f=wkt",
+		{
+			headers: {
+				"x-request-id": "255"
+			}
+		}
+	)
+	let text = await result.text()
+	console.log("Test Valid x-request-id on Valid Request")
+	console.log("Text:", text)
+	console.log("Headers:", ...result.headers)
+	console.assert(result.headers.get("x-request-id")==="255", "x-request-id header not present")
+}
+async function test_valid_x_response_id_on_invalid_request(){
+	let result = await fetch(
+		"/?road=H02&slk=10&f=wkt",
+		{
+			headers: {
+				"x-request-id": "255"
+			}
+		}
+	)
+	let text = await result.text()
+	console.log("Test Valid x-request-id on Invalid Request")
+	console.log("Text:", text)
+	console.log("Headers:", ...result.headers)
+	console.assert(result.headers.get("x-request-id")==="255", "x-request-id header not present")
 }
