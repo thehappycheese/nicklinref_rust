@@ -1,43 +1,38 @@
-mod basic_error;
-mod esri_serde;
-mod geoprocessing;
-mod echo_x_request_id;
-mod query_parameters;
-mod settings;
-mod unit_conversion;
-mod update_data;
-
-use std::convert::Infallible;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
-use basic_error::BasicErrorWarp;
-use bytes;
-use settings::Settings;
-use warp::wrap_fn;
-use warp::{Filter};
+//use bytes;
+use warp::{Filter, wrap_fn};
 
+mod helpers;
+use helpers::{
+	echo_x_request_id,
+	with_shared_data,
+	ErrorWithMessage
+};
+
+mod esri_serde;
 use esri_serde::LayerSaved;
-use geoprocessing::{get_linestring, get_linestring_m, get_points};
-use echo_x_request_id::{echo_x_request_id};
-use query_parameters::QueryParameterBatch;
+
+mod geoprocessing;
+use geoprocessing::{
+	get_linestring,
+	get_linestring_m,
+	get_points
+};
+
+mod query_parameters;
+use query_parameters::{
+	QueryParameterBatch,
+	QueryParametersLine,
+	QueryParametersPoint
+};
+
+mod settings;
+use settings::Settings;
+
+mod update_data;
 use update_data::{load_data, perform_analysis, update_data, LookupMap};
-
-use crate::query_parameters::{QueryParametersLine, QueryParametersPoint};
-
-/// Moves a clone of an Arc<T> into a warp filter chain.
-/// The closure here takes ownership of the first clone,
-/// and provides yet another clone of the arc whenever it is called.
-/// I think this lets the first Arc clone live as long as the filter
-/// I spent HOURS trying to move a reference to data and data_index
-/// directly from main into the .and_then() filter closures with no success.
-/// This is the only way i have found that works, therefore I can only assume this is idiomatic warp/rust.
-fn clone_arc<T>(something: T) -> impl warp::Filter<Extract = (T,), Error = Infallible> + Clone
-where
-    T: Send + Sync + Clone,
-{
-    warp::any().map(move || something.clone())
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -77,8 +72,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //       static file route for obscure and frustrating reasons
     let route_get_query = 
         warp::get()
-        .and(clone_arc(data.clone()))
-        .and(clone_arc(data_index.clone()));
+        .and(with_shared_data(data.clone()))
+        .and(with_shared_data(data_index.clone()));
 
     // Line geometry is requested
     let route_lines_query = 
@@ -91,16 +86,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             | async move {
                 if query.m {
                     match get_linestring_m(&query, &data, &data_index) {
-                        //Ok(s) => response_builder.status(200).body(s),
-                        //Err(e) => response_builder.status(500).body(format!("{}", e)),
                         Ok(s) => Ok(s),
-                        Err(e) => Err(warp::reject::custom(BasicErrorWarp::new(e))),
+                        Err(e) => Err(ErrorWithMessage::reject(e)),
 
                     }
                 } else {
                     match get_linestring(&query, &data, &data_index) {
                         Ok(s) => Ok(s),
-                        Err(e) => Err(warp::reject::custom(BasicErrorWarp::new(e))),
+                        Err(e) => Err(ErrorWithMessage::reject(e)),
                     }
                 }
             });
@@ -116,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             | async move {
                 match get_points(&query, &data, &data_index) {
                     Ok(s) => Ok(s),
-                    Err(e) => Err(warp::reject::custom(BasicErrorWarp::new(e))),
+                    Err(e) => Err(ErrorWithMessage::reject(e)),
                 }
             });
 
@@ -125,8 +118,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // extracts request body as bytes
     let route_post_query = warp::post()
         .and(warp::path("batch").and(warp::path::end()))
-        .and(clone_arc(data.clone()))
-        .and(clone_arc(data_index.clone()))
+        .and(with_shared_data(data.clone()))
+        .and(with_shared_data(data_index.clone()))
         .and(warp::body::bytes());
 
     // Batch Line Geometry is requested
@@ -149,7 +142,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .join(",");
                     Ok(format!("[{}]", result_string))
                 } else {
-                    Err(warp::reject::custom(BasicErrorWarp::new("Unable to parse batch query parameters")))
+                    Err(ErrorWithMessage::reject("Unable to parse batch query parameters"))
                 }
             });
 

@@ -5,7 +5,7 @@ use nickslinetoolsrust::line_string_measured::LineStringMeasured;
 use nickslinetoolsrust::vector2::Vector2;
 use std::str;
 use std::sync::Arc;
-use crate::unit_conversion::convert_metres_to_degrees;
+use crate::helpers::convert_metres_to_degrees;
 
 /// Computes the mean angle from angles in radians
 /// (from https://rosettacode.org/wiki/Averages/Mean_angle#Rust)

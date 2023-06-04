@@ -1,6 +1,3 @@
 target/
-DEL_ME/
 data/
 secrets.json
-.vscode/
-certs/
