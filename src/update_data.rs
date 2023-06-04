@@ -10,9 +10,10 @@ use lz_fear;
 use reqwest;
 use serde_json;
 
-use crate::basic_error::BasicError;
+use crate::helpers::ErrorWithMessage;
 use crate::settings::Settings;
 use crate::esri_serde::{Cwy, LayerDownloadChunk, LayerSaved, LayerSavedFeature};
+
 
 
 pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
@@ -41,7 +42,7 @@ pub async fn update_data(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::e
 		let url = format!("{}&resultOffset={}", s.NLR_DATA_SOURCE_URL.clone(), offset);
 		let json: LayerDownloadChunk = reqwest::get(url).await?.json().await?;
 		if json.geometryType != "esriGeometryPolyline" {
-			return Err(Box::new(BasicError::new("Rest service returned an object that did not have geometryType:esriGeometryPolyline")));
+			return Err(Box::new(ErrorWithMessage::new("Rest service returned an object that did not have geometryType:esriGeometryPolyline")));
 		}
 		offset += json.features.len();
 		document_to_save.features.extend(
@@ -136,6 +137,12 @@ impl Index<&Cwy> for RoadDataByCwy {
 
 pub type LookupMap = HashMap<char, HashMap<String, RoadDataByCwy>>;
 
+/// TODO: this function builds a LookupMap, but it is based on some
+///       potentially incorrect assumptions about hash table performance.
+///       In practice it is working just fine, but there is probably a
+///       simpler way to do this. Nested Hash tables probably don't perform any 
+///       better than a flat one at lookup-time.
+
 pub fn perform_analysis(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std::error::Error>> {
 	let mut map_from_first_letter: LookupMap = HashMap::new(); // map_from_first_letter_to_roads
 
@@ -150,7 +157,7 @@ pub fn perform_analysis(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std
 			},
 		),
 		None => {
-			return Err(Box::new(BasicError::new(
+			return Err(Box::new(ErrorWithMessage::new(
 				"Zero features received by perform_analysis()",
 			)))
 		}
