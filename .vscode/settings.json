@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
         "reqwest"
-    ]
+    ],
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
 }
