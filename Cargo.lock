@@ -534,7 +534,7 @@ dependencies = [
 
 [[package]]
 name = "nicklinref"
-version = "0.10.1"
+version = "0.10.2"
 dependencies = [
  "bytes",
  "lz-fear",
