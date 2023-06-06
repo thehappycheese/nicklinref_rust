@@ -6,7 +6,7 @@ use lz_fear;
 use reqwest;
 use serde_json;
 
-use crate::helpers::ErrorWithMessage;
+use crate::helpers::ErrorWithStaticMessage;
 use crate::settings::Settings;
 use super::esri_serde::{LayerDownloadChunk, LayerSaved, LayerSavedFeature};
 
@@ -36,7 +36,7 @@ pub async fn download_data(s: &Settings) -> Result<LayerSaved, Box<dyn std::erro
 		let url = format!("{}&resultOffset={}", s.NLR_DATA_SOURCE_URL.clone(), offset);
 		let json: LayerDownloadChunk = reqwest::get(url).await?.json().await?;
 		if json.geometryType != "esriGeometryPolyline" {
-			return Err(Box::new(ErrorWithMessage::new("Rest service returned an object that did not have geometryType:esriGeometryPolyline")));
+			return Err(Box::new(ErrorWithStaticMessage::new("Rest service returned an object that did not have geometryType:esriGeometryPolyline")));
 		}
 		offset += json.features.len();
 		document_to_save.features.extend(

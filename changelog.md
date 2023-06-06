@@ -3,6 +3,8 @@
 ## [0.10.2] 2023-06-05 - Unreleased
 
 - Refactoring to make main.rs short and easy to understand
+- Settings revised. See --help
+  - TODO: --config does not show up in help
 
 ## [0.10.1] 2023-06-01
 

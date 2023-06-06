@@ -27,10 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read settings
     let settings:Settings = match Settings::load_settings(){
         Ok(settings)=>settings,
-        Err(e)=>{
-            println!("Unable to load configuration from environment variables or from any .json file specified with the --config command line option:  {}", e);
-            return Err(e);
-        }
+        Err(e)=> return Err(e.into())
     }.into();
 
     // Load data
