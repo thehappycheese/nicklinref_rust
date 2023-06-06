@@ -1,7 +1,7 @@
 mod download_or_read_from_file;
 pub use download_or_read_from_file::{
     load_data_from_file,
-    update_data_from_service
+    download_data
 };
 
 pub mod index;

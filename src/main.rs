@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, net::SocketAddr};
 
 use warp::{Filter, wrap_fn};
 
@@ -12,7 +12,7 @@ mod data;
 use data::{
     esri_serde::LayerSaved,
     load_data_from_file,
-    update_data_from_service,
+    download_data,
     index::{
         index_data,
         LookupMap
@@ -25,7 +25,7 @@ use settings::Settings;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read settings
-    let settings:Arc<Settings> = match Settings::get(){
+    let settings:Settings = match Settings::load_settings(){
         Ok(settings)=>settings,
         Err(e)=>{
             println!("Unable to load configuration from environment variables or from any .json file specified with the --config command line option:  {}", e);
@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "Failed to load from cache due to error {}. Will try re-download.",
                 error_message
             );
-            update_data_from_service(&settings).await?
+            download_data(&settings).await?
         }
     }.into();
     println!("Loaded {} features.", data.features.len());
@@ -68,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Serve
-    let address = settings.get_socket_address();
+    let address:SocketAddr = (settings.NLR_ADDR, settings.NLR_PORT).into();
     println!("Serving at {:?}", address);
     warp::serve(filter).run(address).await;
     Ok(())

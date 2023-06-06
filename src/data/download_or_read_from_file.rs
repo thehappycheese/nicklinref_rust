@@ -1,7 +1,6 @@
 use std::fs;
 use std::fs::File;
 use std::path::Path;
-use std::sync::Arc;
 
 use lz_fear;
 use reqwest;
@@ -11,7 +10,7 @@ use crate::helpers::ErrorWithMessage;
 use crate::settings::Settings;
 use super::esri_serde::{LayerDownloadChunk, LayerSaved, LayerSavedFeature};
 
-pub async fn update_data_from_service(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
+pub async fn download_data(s: &Settings) -> Result<LayerSaved, Box<dyn std::error::Error>> {
 
 	if let Err(e) = fs::remove_file(&s.NLR_DATA_FILE) {
 		println!("Tried to delete the data file '{}' but: {}", &s.NLR_DATA_FILE, e);
@@ -64,7 +63,7 @@ pub async fn update_data_from_service(s: &Arc<Settings>) -> Result<LayerSaved, B
 	Ok(document_to_save)
 }
 
-pub fn load_data_from_file(s: &Arc<Settings>) -> Result<LayerSaved, Box<dyn std::error::Error>> {
+pub fn load_data_from_file(s: &Settings) -> Result<LayerSaved, Box<dyn std::error::Error>> {
 	println!("Loading data from file.");
 	let file_in_json = File::open(Path::new(&s.NLR_DATA_FILE))?;
 	let decomp = lz_fear::framed::decompress_frame(file_in_json)?;
