@@ -63,13 +63,20 @@ pub struct LayerFeature {
 	pub geometry: FeatureGeom,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Deserialize, Debug)]
+// this enum is used to restrict parsing to succeed only when receiving a particular geometry type
+pub enum LayerAllowedGeometryTypes {
+    esriGeometryPolyline,
+}
+
 #[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
-/// This is the struct/document that will be deserialized from what is received over the interwebs.
+/// This is the struct/document that will be deserialized from what is received over the internet
 pub struct LayerDownloadChunk {
 	#[serde(default)]
 	pub exceededTransferLimit: bool,
-	pub geometryType: String,
+	pub geometryType: LayerAllowedGeometryTypes,
 	pub features: Vec<LayerFeature>,
 }
 

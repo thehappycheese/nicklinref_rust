@@ -4,7 +4,7 @@ use warp::Filter;
 
 use crate::{
     data::esri_serde::LayerSaved,
-    helpers::{with_shared_data, ErrorWithMessage},
+    helpers::{with_shared_data, ErrorWithStaticMessage},
     data::index::LookupMap,
 };
 
@@ -28,7 +28,7 @@ pub fn points(
         | async move {
             match get_points(&query, &data, &data_index) {
                 Ok(s) => Ok(s),
-                Err(e) => Err(ErrorWithMessage::reject(e)),
+                Err(e) => Err(ErrorWithStaticMessage::reject(e)),
             }
         })
 }

@@ -15,3 +15,5 @@ serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 nickslinetoolsrust = {git="https://github.com/thehappycheese/nicks_line_tools_rust.git", tag="v1.2.0"}
 lz-fear = "0.1.1"
+figment = { version = "0.10.10", features = ["json", "env"] }
+clap = { version = "4.3.2", features = ["derive", "env"] }

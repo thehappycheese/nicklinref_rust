@@ -4,7 +4,7 @@ use warp::Filter;
 
 use crate::{
     data::esri_serde::LayerSaved,
-    helpers::{with_shared_data, ErrorWithMessage},
+    helpers::{with_shared_data, ErrorWithStaticMessage},
     data::index::LookupMap,
 };
 
@@ -29,13 +29,13 @@ pub fn lines(
             if query.m {
                 match get_linestring_m(&query, &data, &data_index) {
                     Ok(s) => Ok(s),
-                    Err(e) => Err(ErrorWithMessage::reject(e)),
+                    Err(e) => Err(ErrorWithStaticMessage::reject(e)),
 
                 }
             } else {
                 match get_linestring(&query, &data, &data_index) {
                     Ok(s) => Ok(s),
-                    Err(e) => Err(ErrorWithMessage::reject(e)),
+                    Err(e) => Err(ErrorWithStaticMessage::reject(e)),
                 }
             }
         })

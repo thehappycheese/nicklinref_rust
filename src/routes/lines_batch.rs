@@ -6,7 +6,7 @@ use warp::Filter;
 
 use crate::{
     data::esri_serde::LayerSaved,
-    helpers::{with_shared_data, ErrorWithMessage},
+    helpers::{with_shared_data, ErrorWithStaticMessage},
     data::index::LookupMap,
 };
 
@@ -42,7 +42,7 @@ pub fn lines_batch(
                     .join(",");
                 Ok(format!("[{}]", result_string))
             } else {
-                Err(ErrorWithMessage::reject("Unable to parse batch query parameters"))
+                Err(ErrorWithStaticMessage::reject("Unable to parse batch query parameters"))
             }
         })
 }

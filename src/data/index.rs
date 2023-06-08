@@ -2,7 +2,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::ops::Index;
 use std::sync::Arc;
-use crate::helpers::ErrorWithMessage;
+use crate::helpers::ErrorWithStaticMessage;
 use super::esri_serde::{Cwy, LayerSaved};
 
 #[allow(non_snake_case)]
@@ -85,7 +85,7 @@ pub fn index_data(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std::erro
 			},
 		),
 		None => {
-			return Err(Box::new(ErrorWithMessage::new(
+			return Err(Box::new(ErrorWithStaticMessage::new(
 				"Zero features received by perform_analysis()",
 			)))
 		}
