@@ -27,6 +27,6 @@ impl Reject for ErrorWithStaticMessage {}
 
 impl fmt::Display for ErrorWithStaticMessage {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "ErrorWithStaticMessage({})", &self.msg)
+		write!(f, "Error: {}", &self.msg)
 	}
 }

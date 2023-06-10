@@ -65,7 +65,7 @@ pub struct LayerFeature {
 
 #[allow(non_camel_case_types)]
 #[derive(Deserialize, Debug)]
-// this enum is used to restrict parsing to succeed only when receiving a particular geometry type
+/// used to restrict parsing to succeed only when receiving the expected geometry type
 pub enum LayerAllowedGeometryTypes {
     esriGeometryPolyline,
 }
