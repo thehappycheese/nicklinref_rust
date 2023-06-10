@@ -1,4 +1,4 @@
-use std::{sync::Arc, net::SocketAddr, path::Path, error::Error};
+use std::{sync::Arc, net::SocketAddr, error::Error};
 use clap::Parser;
 use warp::{Filter, wrap_fn};
 
