@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use warp::Filter;
+use warp::{Filter, Rejection};
 
 use crate::{
-    data::esri_serde::LayerSaved,
-    helpers::{with_shared_data, ErrorWithStaticMessage},
-    data::{index::LookupMap, IndexedData},
+    helpers::with_shared_data,
+    data::IndexedData,
 };
 
 use super::{
@@ -15,8 +14,7 @@ use super::{
 
 pub fn lines(
     indexed_data: Arc<IndexedData>,
-    
-) -> impl Filter<Extract = (String,), Error = warp::Rejection> + Clone {
+) -> impl Filter<Extract = (String,), Error = Rejection> + Clone {
     warp::get()
     .and(with_shared_data(indexed_data.clone()))
     .and(warp::query())
@@ -25,9 +23,9 @@ pub fn lines(
             query: QueryParametersLine
         | async move {
             if query.m {
-                get_linestring_m(&query, &indexed_data).into()
+                get_linestring_m(&query, &indexed_data).map_err(|err|err.as_rejection())
             } else {
-                get_linestring(&query, &indexed_data)
+                get_linestring(&query, &indexed_data).map_err(|err|err.as_rejection())
             }
         })
 }
