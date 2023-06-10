@@ -19,6 +19,9 @@ impl ErrorWithStaticMessage{
 	pub fn reject(msg:& 'static str) -> Rejection{
 		warp::reject::custom(ErrorWithStaticMessage{msg:msg})
 	}
+    pub fn as_rejection(self) -> warp::Rejection {
+        warp::reject::custom(self)
+    }
 }
 
 impl Error for ErrorWithStaticMessage {}
