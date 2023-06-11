@@ -18,6 +18,8 @@ pub struct IndexedData {
 
 impl IndexedData {
 
+    /// Load existing data from the cache file path, or try to download data 
+    /// and save it to the cache file path
     pub async fn load(
         path_to_data_cache_file:&String,
         url_to_download_new_data:&String,
@@ -33,7 +35,7 @@ impl IndexedData {
         })
     }
 
-    fn get_road(&self, road_name:&String) -> Result<&RoadDataByCwy, ErrorWithStaticMessage> {
+    fn get_road_by_cwy(&self, road_name:&String) -> Result<&RoadDataByCwy, ErrorWithStaticMessage> {
         
         // try to get the first letter of the road name
         let first_letter = road_name.chars().next().ok_or(
@@ -52,7 +54,7 @@ impl IndexedData {
     }
 
     pub fn query(&self, road_name:&String, cwy:&RequestedCwy) -> Result<impl Iterator<Item = &LayerSavedFeature>, ErrorWithStaticMessage> {
-        let road_data_by_cwy = self.get_road(road_name)?;
+        let road_data_by_cwy = self.get_road_by_cwy(road_name)?;
         let feature_iterator = cwy
             .into_iter()
             .filter_map(|cwy|{
