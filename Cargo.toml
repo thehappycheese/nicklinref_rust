@@ -1,17 +1,23 @@
 [package]
 name = "nicklinref"
-version = "0.10.1"
+version = "0.10.2"
+description = "nicklinref is a server that slices segments of the Main Roads Western Australia road network based on slk"
 authors = ["thehappycheese"]
 edition = "2021"
 readme = "README.md"
 repository = "https://github.com/thehappycheese/nicklinref_rust"
 
 [dependencies]
-reqwest = { version = "0.11",  default-features = false, features = ["rustls-tls", "json"] }
-tokio = { version = "1.4.0", features=["macros","rt-multi-thread"]}
-warp = {version="0.3.5", features=["compression"]}
+reqwest = { version = "0.11", default-features = false, features = [
+    "rustls-tls",
+    "json",
+] }
+tokio = { version = "1.4.0", features = ["macros", "rt-multi-thread"] }
+warp = { version = "0.3.5", features = ["compression"] }
 bytes = "1.0"
-serde = {version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-nickslinetoolsrust = {git="https://github.com/thehappycheese/nicks_line_tools_rust.git", tag="v1.2.0"}
+nickslinetoolsrust = { git = "https://github.com/thehappycheese/nicks_line_tools_rust.git", tag = "v1.2.0" }
 lz-fear = "0.1.1"
+figment = { version = "0.10.10", features = ["json", "env"] }
+clap = { version = "4.3.2", features = ["derive", "env"] }

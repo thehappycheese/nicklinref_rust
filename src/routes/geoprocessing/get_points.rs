@@ -1,50 +1,14 @@
-use crate::esri_serde::{LayerSaved};
-use crate::query_parameters::{OutputFormat, QueryParametersPoint};
-use crate::update_data::{LookupMap, RoadDataByCwy};
+use crate::data::IndexedData;
+use crate::routes::query_parameters::{OutputFormat, QueryParametersPoint};
 use nickslinetoolsrust::line_string_measured::LineStringMeasured;
 use nickslinetoolsrust::vector2::Vector2;
-use std::str;
-use std::sync::Arc;
-use crate::unit_conversion::convert_metres_to_degrees;
-
-/// Computes the mean angle from angles in radians
-/// (from https://rosettacode.org/wiki/Averages/Mean_angle#Rust)
-fn mean_angle(angles: Vec<f64>) -> f64 {
-    let length: f64 = angles.len() as f64;
-    let cos_mean: f64 = angles.iter().fold(0.0, |sum, i| sum + i.cos()) / length;
-    let sin_mean: f64 = angles.iter().fold(0.0, |sum, i| sum + i.sin()) / length;
-    (sin_mean).atan2(cos_mean)
-}
+use crate::helpers::{convert_metres_to_degrees, ErrorWithStaticMessage, mean_angle};
 
 pub fn get_points(
 	query: &QueryParametersPoint,
-	data: &Arc<LayerSaved>,
-	data_index: &Arc<LookupMap>,
-) -> Result<String, &'static str> {
-	let road_data: &RoadDataByCwy = match match query.road.chars().next() {
-		Some(first_letter) => match data_index.get(&first_letter) {
-			Some(mp1) => mp1.get(&query.road),
-			None => {
-				return Err("road lookup failed, first letter did not match any lookup tables.")
-			}
-		},
-		None => return Err("could not get first letter of road"),
-	} {
-		Some(data_lookup_sub_table) => data_lookup_sub_table,
-		None => return Err("full road name not found. lookup failed"),
-	};
-
-	let features = query
-		.cwy
-		.into_iter()
-		.filter_map(|cwy| {
-			if let Some(indexes) = road_data[&cwy] {
-				Some(&data.features[indexes.0..indexes.1])
-			} else {
-				None
-			}
-		})
-		.flatten()
+	indexed_data: &IndexedData,
+) -> Result<String, ErrorWithStaticMessage> {
+	let features = indexed_data.query(&query.road, &query.cwy)?
 		.filter_map(|item| {
 			if item.attributes.END_SLK >= query.slk && item.attributes.START_SLK <= query.slk {
 				let lsm: LineStringMeasured = LineStringMeasured::from(&item.geometry);
@@ -84,7 +48,7 @@ pub fn get_points(
 			if points.len()>0{
 				Ok("[".to_string() + &points + "]")
 			}else{
-				Err("Found no points")
+				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
 		OutputFormat::GEOJSON => {
@@ -100,7 +64,7 @@ pub fn get_points(
 						+ "]}}",
 				)
 			}else{
-				Err("Found no points")
+				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
 		OutputFormat::WKT => {
@@ -111,7 +75,7 @@ pub fn get_points(
 			if points.len()>0{
 				Ok("MULTIPOINT (".to_string() + &points + ")")
 			}else{
-				Err("Found no points")
+				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
 		OutputFormat::LATLON => {
@@ -123,7 +87,7 @@ pub fn get_points(
 					/ (vertexes.len() as f64);
 				Ok(format!("{},{}", point.y, point.x))
 			}else{
-				Err("Found no points")
+				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		},
 		OutputFormat::LATLONDIR => {
@@ -136,7 +100,7 @@ pub fn get_points(
 				let angle = mean_angle(vertexes.iter().map(|item|item.1).collect());
 				Ok(format!("{},{},{}", point.y, point.x, angle.to_degrees()))
 			}else{
-				Err("Found no points")
+				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
 	}

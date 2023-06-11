@@ -26,10 +26,11 @@ impl Ord for LayerFeatureAttr {
 			std::cmp::Ordering::Less=>std::cmp::Ordering::Less,
 			std::cmp::Ordering::Equal=>{
 				
-				// The current implementation does not rely on ordering by START_SLK. We can finish the algorithm earlier:
-				self.CWY.cmp(&other.CWY)
+                self.CWY.cmp(&other.CWY)
+				// TODO: The current implementation does not rely on ordering 
+                // by START_SLK, therefore we can stop here before sorting.
+				// don't forget the sort was removed if you re-write the lookup.
 
-				// TODO: don't forget you removed this:
 				// match self.CWY.cmp(&other.CWY){
 				// 	std::cmp::Ordering::Less=>std::cmp::Ordering::Less,
 				// 	std::cmp::Ordering::Equal=>{
@@ -62,13 +63,20 @@ pub struct LayerFeature {
 	pub geometry: FeatureGeom,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Deserialize, Debug)]
+/// used to restrict parsing to succeed only when receiving the expected geometry type
+pub enum LayerAllowedGeometryTypes {
+    esriGeometryPolyline,
+}
+
 #[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
-/// This is the struct/document that will be deserialized from what is received over the interwebs.
+/// This is the struct/document that will be deserialized from what is received over the internet
 pub struct LayerDownloadChunk {
 	#[serde(default)]
 	pub exceededTransferLimit: bool,
-	pub geometryType: String,
+	pub geometryType: LayerAllowedGeometryTypes,
 	pub features: Vec<LayerFeature>,
 }
 

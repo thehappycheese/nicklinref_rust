@@ -1,4 +1,4 @@
-use crate::esri_serde::Cwy;
+use crate::data::esri_serde::Cwy;
 use serde;
 use serde::de::{Deserialize, Deserializer, Visitor};
 

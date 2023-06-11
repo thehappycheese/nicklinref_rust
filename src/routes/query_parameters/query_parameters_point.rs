@@ -4,14 +4,13 @@ use super::OutputFormat;
 use serde;
 
 #[derive(serde::Deserialize, Debug)]
-pub struct QueryParametersLine {
+pub struct QueryParametersPoint {
 	pub road: String,
 
 	#[serde(default = "default_cwy")]
 	pub cwy: RequestedCwy,
 
-	pub slk_from: f32,
-	pub slk_to: f32,
+	pub slk: f32,
 
 	#[serde(default = "default_offset")]
 	pub offset:f32,
@@ -19,11 +18,6 @@ pub struct QueryParametersLine {
 	#[serde(default = "default_output_format")]
 	pub f: OutputFormat,
 
-	#[serde(default = "default_m")]
-	pub m:bool,
-
-	// #[serde(default = "default_show")]
-	// pub show:bool
 }
 
 fn default_offset() -> f32 {
@@ -37,9 +31,3 @@ fn default_cwy() -> RequestedCwy {
 fn default_output_format() -> OutputFormat {
 	OutputFormat::GEOJSON
 }
-
-fn default_m()->bool{
- 	false
-}
-
-
