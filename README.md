@@ -1,16 +1,18 @@
 
 # NickLinRef <!-- omit in toc -->
 
-NickLinRef, or just 'LinRef', is designed to accurately extract portions of the
+NickLinRef is designed to accurately extract portions of the
 [Western Australia Road Network](https://catalogue.data.wa.gov.au/dataset/mrwa-road-network)
-geometry. You can query this service to receive the road segment data in either
-`GeoJSON` or `WKT` formats. It easily integrates with Excel via the
+geometry using `road/slk_from/slk_to` or just `road/slk`. You can query this
+service to receive the road segment data in either `GeoJSON` or `WKT` formats.
+
+It can be queried in Excel using the
 [`=WEBSERVICE()` formula](https://support.microsoft.com/en-us/office/webservice-function-0546a35a-ecc6-4739-aed7-c0b7ce1562c4).
-or PowerBI using the
-[`Web.Contents` function](https://learn.microsoft.com/en-us/powerquery-m/web-contents)
-and is used by my Custom PowerBI Visual
-[NickMapBI](https://github.com/thehappycheese/nickmap-bi) to pull dynamically
-create geometry.
+or in PowerBI using the
+[`Web.Contents()` function](https://learn.microsoft.com/en-us/powerquery-m/web-contents)
+and best of all in my custom PowerBI visual
+[NickMapBI](https://github.com/thehappycheese/nickmap-bi) to dynamically
+create and visualise geometry based on live data:
 
 ![NickMapBI](https://github.com/thehappycheese/nickmap-bi/blob/main/readme_extras/v4.2.0-screenshot.png)
 
