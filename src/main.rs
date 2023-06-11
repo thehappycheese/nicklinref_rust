@@ -1,23 +1,14 @@
-use std::{sync::Arc, net::SocketAddr, path::Path, error::Error};
+use std::{sync::Arc, net::SocketAddr, error::Error};
 use clap::Parser;
 use warp::{Filter, wrap_fn};
 
 mod helpers;
-use helpers::{
-    echo_x_request_id
-};
+use helpers::echo_x_request_id;
 
 mod routes;
 
 mod data;
-use data::{
-    esri_serde::LayerSaved,
-    read_or_update_cache_data,
-    index::{
-        index_data,
-        LookupMap
-    },
-};
+use data::IndexedData;
 
 mod settings;
 use settings::Settings;
@@ -30,22 +21,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let settings:Settings = Settings::parse();
 
     // Load data
-    let data: Arc<LayerSaved> = read_or_update_cache_data(
-        Path::new(&settings.NLR_DATA_FILE),
+    let indexed_data:Arc<_> = IndexedData::load(
+        &settings.NLR_DATA_FILE,
         &settings.NLR_DATA_SOURCE_URL,
         &settings.NLR_FORCE_UPDATE_DATA
     ).await?.into();
-    println!("Loaded {} features.", data.features.len());
-
-    // Index data for fast lookup
-    let data_index: Arc<LookupMap> = index_data(data.clone())?.into();
-    println!("Indexing complete.");
 
     // Define routes
-    let route_show = warp::path("show").and(warp::fs::dir(settings.NLR_STATIC_HTTP.clone()));
-    let route_lines = routes::lines(data.clone(), data_index.clone());
-    let route_points = routes::points(data.clone(), data_index.clone());
-    let route_lines_batch = routes::lines_batch(data.clone(), data_index.clone());
+    let route_static_folder = warp::fs::dir(settings.NLR_STATIC_HTTP.clone());
+    let route_show = warp::path("show").and(route_static_folder);
+    let route_lines = routes::lines(indexed_data.clone());
+    let route_points = routes::points(indexed_data.clone());
+    let route_lines_batch = routes::lines_batch(indexed_data.clone());
 
     // Build routes
     let filter = route_show.or(

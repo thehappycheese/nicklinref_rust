@@ -22,8 +22,6 @@ pub struct QueryParametersLine {
 	#[serde(default = "default_m")]
 	pub m:bool,
 
-	// #[serde(default = "default_show")]
-	// pub show:bool
 }
 
 fn default_offset() -> f32 {
@@ -41,5 +39,3 @@ fn default_output_format() -> OutputFormat {
 fn default_m()->bool{
 	false
 }
-
-

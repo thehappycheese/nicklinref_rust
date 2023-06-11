@@ -1,9 +1,5 @@
-mod download_or_read_from_file;
-pub use download_or_read_from_file::{
-    load_data_from_file,
-    download_data,
-    read_or_update_cache_data
-};
+mod indexed_data;
+pub use indexed_data::IndexedData;
 
 pub mod index;
 

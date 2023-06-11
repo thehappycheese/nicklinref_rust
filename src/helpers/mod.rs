@@ -9,3 +9,6 @@ pub use error_with_static_message::ErrorWithStaticMessage;
 
 mod unit_conversion;
 pub use unit_conversion::convert_metres_to_degrees;
+
+mod mean_angle;
+pub use mean_angle::mean_angle;

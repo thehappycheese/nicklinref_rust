@@ -9,7 +9,9 @@ const EARTH_METRES_PER_DEGREE:f64	= EARTH_METRES_PER_RADIAN * std::f64::consts::
 // and is never used to convert to/from absolute coordinates in metres.
 // therefore since it is used to perform a relative offset we can expect the error in the resulting geometry to be vanishingly small as long as the offsets are in the order of metres and not kilometres
 
-
+/// Use a simplistic conversion from metres to degrees to convert cartesian
+/// distances in metres into geocentric coordinate distances in degrees.
+/// It is not accurate but produces acceptable results in Western Australia
 pub fn convert_metres_to_degrees(metres: f64) -> f64{
 	metres / EARTH_METRES_PER_DEGREE
 }

@@ -6,7 +6,9 @@ use clap::Parser;
 
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Clone, Parser)]
-
+#[command(name="NickLinRef")]
+#[command(version)]
+#[command(about, long_about=None)]
 pub struct Settings {
     /// The IP address to listen on
     #[clap(
@@ -66,16 +68,3 @@ pub struct Settings {
 fn default_NLR_FORCE_UPDATE_DATA()->bool{
     false
 }
-
-// impl Default for Settings {
-//     fn default() -> Settings {
-//         Settings {
-//             NLR_ADDR:IpAddr::V4(Ipv4Addr::new(127,0,0,1)),
-//             NLR_PORT:8080,
-//             NLR_DATA_FILE:"./data/data.json.lz4".to_string(),
-//             NLR_DATA_SOURCE_URL:"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json".to_string(),
-//             NLR_STATIC_HTTP:"./__static_http".to_string(),
-//         }
-//     }
-// }
-

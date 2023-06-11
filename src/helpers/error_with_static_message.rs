@@ -19,6 +19,9 @@ impl ErrorWithStaticMessage{
 	pub fn reject(msg:& 'static str) -> Rejection{
 		warp::reject::custom(ErrorWithStaticMessage{msg:msg})
 	}
+    pub fn as_rejection(self) -> warp::Rejection {
+        warp::reject::custom(self)
+    }
 }
 
 impl Error for ErrorWithStaticMessage {}
@@ -27,6 +30,6 @@ impl Reject for ErrorWithStaticMessage {}
 
 impl fmt::Display for ErrorWithStaticMessage {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "ErrorWithStaticMessage({})", &self.msg)
+		write!(f, "Error: {}", &self.msg)
 	}
 }

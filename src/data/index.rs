@@ -1,7 +1,6 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::ops::Index;
-use std::sync::Arc;
 use crate::helpers::ErrorWithStaticMessage;
 use super::esri_serde::{Cwy, LayerSaved};
 
@@ -69,9 +68,9 @@ pub type LookupMap = HashMap<char, HashMap<String, RoadDataByCwy>>;
 ///       potentially incorrect assumptions about hash table performance.
 ///       In practice it is working just fine, but there is probably a
 ///       simpler way to do this. Nested Hash tables probably don't perform any 
-///       better than a flat one at lookup-time.
+///       better than a flat one.
 
-pub fn index_data(layer: Arc<LayerSaved>) -> Result<LookupMap, Box<dyn std::error::Error>> {
+pub fn index_data(layer: &LayerSaved) -> Result<LookupMap, Box<dyn std::error::Error>> {
 	let mut map_from_first_letter: LookupMap = HashMap::new(); // map_from_first_letter_to_roads
 
 	let (mut previous_road, mut previous_cwy, mut first_letter) = match layer.features.iter().next()
