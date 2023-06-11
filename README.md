@@ -2,22 +2,22 @@
 # NickLinRef <!-- omit in toc -->
 
 NickLinRef, or just 'LinRef', is designed to accurately extract portions of the
-Western Australia Road Network geometry. You can query this service to receive
-the road segment data in either `GeoJSON` or `WKT` formats. It seamlessly
-integrates with Excel via the
+[Western Australia Road Network](https://catalogue.data.wa.gov.au/dataset/mrwa-road-network)
+geometry. You can query this service to receive the road segment data in either
+`GeoJSON` or `WKT` formats. It seamlessly integrates with Excel via the
 [`=WEBSERVICE()` formula](https://support.microsoft.com/en-us/office/webservice-function-0546a35a-ecc6-4739-aed7-c0b7ce1562c4).
 
 To get started, download and extract a pre-compiled version of this application
 from the [releases](/releases) page. Run `nicklinref.exe` and navigate to
-<http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> to test the
-application.
+<http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> test the server is
+working.
 
 ## Table of Contents: <!-- omit in toc -->
 
 - [1. Purpose](#1-purpose)
 - [2. Usage](#2-usage)
   - [2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)](#21-normal-usage---text-response-geojson--wkt--json--latlon)
-    - [2.1.1. Example - Get a Lines -WKT](#211-example---get-a-lines--wkt)
+    - [2.1.1. Example - Get a Lines - WKT](#211-example---get-a-lines---wkt)
     - [2.1.2. Example - Get Points - GeoJSON](#212-example---get-points---geojson)
     - [2.1.3. Example - Get Point - Simple Latitude Longitude](#213-example---get-point---simple-latitude-longitude)
   - [2.2. Usage - `/show/` Route](#22-usage---show-route)
@@ -30,16 +30,16 @@ application.
 - [4. Running the server Yourself](#4-running-the-server-yourself)
   - [4.1. Prerequisites](#41-prerequisites)
   - [4.2. Installation / Compilations](#42-installation--compilations)
-    - [5.1. Compiling for Ubuntu / Debian](#51-compiling-for-ubuntu--debian)
-    - [5.2. Compiling for Windows](#52-compiling-for-windows)
+    - [4.2.1. Compiling for Ubuntu / Debian](#421-compiling-for-ubuntu--debian)
+    - [4.2.2. Compiling for Windows](#422-compiling-for-windows)
   - [4.3. Configuration](#43-configuration)
   - [4.4. Configuration - Command Line Interface (CLI)](#44-configuration---command-line-interface-cli)
   - [4.5. Configuration - Environment Variables](#45-configuration---environment-variables)
   - [4.6. Data Download and Refresh](#46-data-download-and-refresh)
-- [6. Roadmap / Future Features](#6-roadmap--future-features)
-- [7. Related Projects](#7-related-projects)
-  - [7.1. Megalinref](#71-megalinref)
-  - [7.2. Python version (Predecessor to this Rust version)](#72-python-version-predecessor-to-this-rust-version)
+- [5. Roadmap / Future Features](#5-roadmap--future-features)
+- [6. Related Projects](#6-related-projects)
+  - [6.1. Megalinref](#61-megalinref)
+  - [6.2. Python version (Predecessor to this Rust version)](#62-python-version-predecessor-to-this-rust-version)
 
 ## 1. Purpose
 
@@ -60,8 +60,6 @@ also able to retrieve Latitude Longitude for road/slk points.
 
 ![NickMapBI](https://github.com/thehappycheese/nickmap-bi/blob/main/readme_extras/v4.2.0-screenshot.png)
 
-
-
 ## 2. Usage
 
 ### 2.1. Normal Usage - Text Response (GeoJSON / WKT / JSON / LATLON)
@@ -73,31 +71,26 @@ at the following address by default:
 
 The  parameters are summarised in the table below:
 
-| Name       | Description                                                                                                                                                                                           | Example Value               | Optional | Default   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------- | --------- |
-| `road`     | Main Roads Road Number or Local Government Road Number (case sensitive)                                                                                                                               | `road=H001`                 | No       | -         |
-| `slk_from` | Straight Line Kilometre to start the segment                                                                                                                                                          | `slk_from=1.55`             | No       | -         |
-| `slk_to`   | Straight Line Kilometre to end the segment                                                                                                                                                            | `slk_to=2.3`                | No       | -         |
-| `slk`      | Straight Line Kilometre to a point. (should not be combined with `slk_from` and `slk_to`, see notes below)                                                                                            | `slk=3`                     | No       | -         |
-| `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                            | `cway=LS` or `cway=RS`      | Yes      | `LRS`     |
-| `offset`   | Number of metres to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right. | `offset=4` or `offset=-3.5` | Yes      | `0`       |
-| `f`        | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)                                                                                                 | `f=geojson`                 | Yes      | `geojson` |
-| `m`        | Option to include `M` coordinates in `geojson`, `wkt` or `json` modes.                                                                                                                                | `m=true`                    | Yes      | `false`   |
+| Name       | Description                                                                                                                                                                                           | Example Value               | Lines | Points | Default   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----- | ------ | --------- |
+| `road`     | Main Roads Road Number or Local Government Road Number (case sensitive)                                                                                                                               | `road=H001`                 | ✔️     | ✔️      | -         |
+| `slk_from` | Straight Line Kilometre to start the segment                                                                                                                                                          | `slk_from=1.55`             | ✔️     | ❌      | -         |
+| `slk_to`   | Straight Line Kilometre to end the segment                                                                                                                                                            | `slk_to=2.3`                | ✔️     | ❌      | -         |
+| `slk`      | Straight Line Kilometre to a point. (should not be combined with `slk_from` and `slk_to`, see notes below)                                                                                            | `slk=3`                     | ❌     | ✔️      | -         |
+| `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                            | `cway=LS` or `cway=RS`      | ❔     | ❔      | `LRS`     |
+| `offset`   | Number of metres to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right. | `offset=4` or `offset=-3.5` | ❔     | ❔      | `0`       |
+| `f`        | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)                                                                                                 | `f=geojson`                 | ❔     | ❔      | `geojson` |
+| `m`        | Option to include `M` coordinates in `geojson`, `wkt` or `json` modes.                                                                                                                                | `m=true`                    | ❔     | ❔      | `false`   |
 
 > **Note:**
 > 
 > 1. Parameters are case insensitive; `CWY=LS` should work the same as `cwy=ls`.
-> 1. If `slk_from` and `slk_to` are provided then
->    - the `slk` parameter is ignored if present
->    - A MultiLineString geometry is returned
->    - even if only a single LineString is generated it still returns it as a
->      MultiLineString geometry
-> 1. If the `slk` parameter is used then
->    - MultiPoint geometry will be returned
->    - even if only a single point is generated it still returns it as a MultiPoint geometry
+> 1. For `f=wkt` and `f=geojson` the result is always a MultiPoint or
+>    MultiLineString even if the consist of only one Point or LineString.
 > 1. When `f=GeoJSON` responses are always wrapped in a `Feature`.
-> 1. The `f=json` format is a nested array in the same format as the geojson
->    `MultiLineString` or `MultiPoint` `"coordinates":...` array format.
+> 1. The `f=json` format is a nested array like the `"coordinates":...`
+>    attribute  in the same format as the geojson `MultiLineString` or
+>    `MultiPoint`  array format.
 > 1. The `f=latlon` and `f=latlondir` formats are special:
 >    - These formats are only valid when using the `slk=` mode.
 >    - It will always return a single comma separated latitude longitude pair;
@@ -108,8 +101,7 @@ The  parameters are summarised in the table below:
 >       weird things might happen if the carriageways are going in very different directions.
 >       Direction is measured anti-clockwise-positive from east.
 
-
-#### 2.1.1. Example - Get a Lines -WKT
+#### 2.1.1. Example - Get a Lines - WKT
 
 The following example fetches the Left and Single carriageway portions of Albany
 Highway from slk 1km to 2km and offsets them 10 metres to the left of the road.
@@ -362,7 +354,7 @@ Run `nicklinref.exe` then visit
 <http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> to test if it is
 working.
 
-#### 5.1. Compiling for Ubuntu / Debian
+#### 4.2.1. Compiling for Ubuntu / Debian
 
 Install required packages[^1][^2]:
 
@@ -401,7 +393,7 @@ Build and run:
 cargo run --release
 ```
 
-#### 5.2. Compiling for Windows
+#### 4.2.2. Compiling for Windows
 
 Install rust: <https://www.rust-lang.org/tools/install>. You may be prompted to
 install some microsoft visual C++ thing which is used for linking native
@@ -502,7 +494,7 @@ downloaded.
 
 
 
-## 6. Roadmap / Future Features
+## 5. Roadmap / Future Features
 
 - Define behaviour when a reversed interval is provided (`slk_to < slk_from`).
 - Improve error message when selecting an SLK which is beyond the valid range for a road that exists.
@@ -515,15 +507,15 @@ downloaded.
 - Modify `/batch/` mode to accept both linestring and point queries at the same time
 - Allow lookup using `true`, or `true_from` and `true_to`
 
-## 7. Related Projects
+## 6. Related Projects
 
-### 7.1. Megalinref
+### 6.1. Megalinref
 
 Megalinref is an attempt to bring the functionality of this server directly to
 python. It is a rust-powered python library that will do all the same things as
 this server, but without the overhead of running a rest service on localhost.
 
-### 7.2. Python version (Predecessor to this Rust version)
+### 6.2. Python version (Predecessor to this Rust version)
 
 This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>
