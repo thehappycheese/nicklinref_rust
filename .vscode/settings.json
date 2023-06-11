@@ -1,10 +1,13 @@
 {
     "cSpell.words": [
+        "chainage",
         "linestring",
+        "nicklinref",
         "nickslinetoolsrust",
-        "Polyline",
+        "polyline",
         "reqwest"
     ],
     "editor.insertSpaces": true,
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "cSpell.language": "en-GB"
 }
