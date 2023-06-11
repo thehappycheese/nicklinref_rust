@@ -1,4 +1,10 @@
-use warp::{http::HeaderValue, reply::Response, Filter, Rejection, Reply};
+use warp::{
+    http::HeaderValue,
+    reply::Response,
+    Filter,
+    Rejection,
+    Reply,
+};
 
 /// Echoes back the `x-request-id` header from the request, if it is present and
 /// can be parsed as a `u64`. Otherwise the response is not modified.

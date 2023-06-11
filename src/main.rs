@@ -3,16 +3,12 @@ use clap::Parser;
 use warp::{Filter, wrap_fn};
 
 mod helpers;
-use helpers::{
-    echo_x_request_id
-};
+use helpers::echo_x_request_id;
 
 mod routes;
 
 mod data;
-use data::{
-    IndexedData,
-};
+use data::IndexedData;
 
 mod settings;
 use settings::Settings;
