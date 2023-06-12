@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="61.205128mm"
+   height="47.243591mm"
+   viewBox="0 0 61.205128 47.243591"
+   version="1.1"
+   id="svg18"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="offset-direction-diagram.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview20"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="3.7522727"
+     inkscape:cx="176.55966"
+     inkscape:cy="102.33798"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs15">
+    <inkscape:path-effect
+       effect="ruler"
+       id="path-effect236"
+       is_visible="true"
+       lpeversion="1"
+       unit="mm"
+       mark_distance="2"
+       mark_length="3"
+       minor_mark_length="1.5"
+       major_mark_steps="5"
+       shift="0"
+       offset="0"
+       mark_dir="both"
+       border_marks="both" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-2.4679492,-6.2051282)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.459999;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+       id="rect3783"
+       width="61.205128"
+       height="47.243591"
+       x="2.4679492"
+       y="6.2051282" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;fill-opacity:1;stroke-width:0.264583"
+       x="47.103653"
+       y="50.857357"
+       id="text292-1-1"><tspan
+         sodipodi:role="line"
+         id="tspan290-7-7"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke-width:0.264583"
+         x="47.103653"
+         y="50.857357">SLK</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;stroke-width:0.264583"
+       x="32.205685"
+       y="33.256966"
+       id="text389"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
+         x="32.205685"
+         y="33.256966"
+         id="tspan4658">Negative</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
+         x="32.205685"
+         y="37.137516"
+         id="tspan4664">Values</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
+         x="32.205685"
+         y="41.018066"
+         id="tspan4660">Offset</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
+         x="32.205685"
+         y="44.898617"
+         id="tspan4666">Left</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;stroke-width:0.46;stroke-dasharray:none"
+       x="45.150272"
+       y="33.256966"
+       id="text389-7"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;stroke-width:0.46;stroke-dasharray:none"
+         x="45.150272"
+         y="33.256966"
+         id="tspan1322-7">Positive</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;stroke-width:0.46;stroke-dasharray:none"
+         x="45.150272"
+         y="37.137516"
+         id="tspan4677">Values</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;stroke-width:0.46;stroke-dasharray:none"
+         x="45.150272"
+         y="41.018066"
+         id="tspan4679">Offset</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;stroke-width:0.46;stroke-dasharray:none"
+         x="45.150272"
+         y="44.898617"
+         id="tspan4681">Right</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+       x="40.266857"
+       y="50.816021"
+       id="text292"><tspan
+         sodipodi:role="line"
+         id="tspan290"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         x="40.266857"
+         y="50.816021">0</tspan></text>
+    <path
+       style="fill:none;stroke:#333333;stroke-width:0.465;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="M 36.732534,49.310529 V 9.3105296 m 1.5,39.9999994 h -3 m 2.25,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 2.25,-2 h -3 m 2.25,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 2.25,-2 h -3 m 2.25,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 2.25,-2 h -3 m 2.25,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 1.5,-2 h -1.5 m 2.25,-1.9999994 h -3"
+       id="path126"
+       inkscape:path-effect="#path-effect236"
+       inkscape:original-d="M 36.732534,49.310529 V 9.3105296" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+       x="40.477699"
+       y="40.894062"
+       id="text296"><tspan
+         sodipodi:role="line"
+         id="tspan294"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         x="40.477699"
+         y="40.894062">1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+       x="40.253422"
+       y="30.849113"
+       id="text300"><tspan
+         sodipodi:role="line"
+         id="tspan298"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         x="40.253422"
+         y="30.849113">2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+       x="40.303032"
+       y="20.84309"
+       id="text304"><tspan
+         sodipodi:role="line"
+         id="tspan302"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         x="40.303032"
+         y="20.84309">3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+       x="40.266857"
+       y="10.836044"
+       id="text308"><tspan
+         sodipodi:role="line"
+         id="tspan306"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         x="40.266857"
+         y="10.836044">4</tspan></text>
+    <path
+       style="fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.264584px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 38.202697,12.566335 36.732533,9.1017852 35.262371,12.566335 Z"
+       id="path1298-6"
+       sodipodi:nodetypes="ccc" />
+    <g
+       id="g3724"
+       transform="translate(2.6458334)">
+      <path
+         id="path1149-5"
+         style="fill:none;stroke:#333333;stroke-width:0.465;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;font-variation-settings:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-miterlimit:4;stroke-dashoffset:0;-inkscape-stroke:none;stop-color:#000000;stop-opacity:1"
+         d="M 29.436746,19.719923 H 19.095149 v -2.472761 l -5.039257,4.634568 5.039257,4.634566 v -2.472761 h 10.341597 z"
+         sodipodi:nodetypes="cccccccc" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+         x="21.620731"
+         y="23.282934"
+         id="text3711"><tspan
+           sodipodi:role="line"
+           id="tspan3709"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+           x="21.620731"
+           y="23.282934">-ive</tspan></text>
+    </g>
+    <g
+       id="g3729"
+       transform="translate(2.1166667,2.090646)">
+      <path
+         id="path1149-5-97"
+         style="fill:none;stroke:#333333;stroke-width:0.465;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;font-variation-settings:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-miterlimit:4;stroke-dashoffset:0;-inkscape-stroke:none;stop-color:#000000;stop-opacity:1"
+         d="m 43.257259,17.629277 h 10.341597 v -2.472761 l 5.039258,4.634568 -5.039258,4.634566 V 21.952888 H 43.257259 Z"
+         sodipodi:nodetypes="cccccccc" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#808080;stroke-width:0.264583"
+         x="50.846848"
+         y="21.192287"
+         id="text3715"><tspan
+           sodipodi:role="line"
+           id="tspan3713"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+           x="50.846848"
+           y="21.192287">+ive</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;stroke-width:0.264583"
+       x="18.565332"
+       y="11.705129"
+       id="text3719"><tspan
+         sodipodi:role="line"
+         id="tspan3717"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:3.88055px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Semi-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+         x="18.565332"
+         y="11.705129">Offest Direction</tspan></text>
+  </g>
+</svg>
