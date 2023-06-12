@@ -163,7 +163,7 @@ The following diagram illustrates the effect of the carriageway filter parameter
 ![carriageway filter](/readme_extras/cwy-illustration.svg)
 
 Note that any combination of `L`, `R` and `S` can be
-used. The filter is applied before lines, or points are sampled from the
+used. The filter is applied before any points or lines are sampled from the
 centreline.
 
 #### 4.3.2. `offset=` Parameter
@@ -172,7 +172,7 @@ The following diagram illustrates the effect of the offset parameter `offset=`.
 
 ![offset direction](/readme_extras/offset-direction-diagram.svg)
 
-The offset is applied before any points are lines are sampled from the road
+The offset is applied before any points or lines are sampled from the road
 centreline.
 
 Note a rough approximation is used to generate offset points and linestrings.
@@ -511,23 +511,7 @@ Options:
 
 As an alternative to command line options, environment variables can be used  instead.
 
-Configuration options set using environment variables are overridden by any
-command line options.
-
-1. Check to see if a config file has been specified on the command line using
-   the `--config` option:
-
-```shell
-nicklinref.exe
-```
-
-1. Finally, environment variables with matching names will be used to overwrite
-   any options loaded so far.
-   - If there is an error while processing an environment variable, the
-     previously loaded option will be used instead. (Note: This may be changed
-     to a fatal error in the future.)
-
-The following table describes the configuration options in more detail:
+> Environment variables are overridden by any command line options.
 
 | Property              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
