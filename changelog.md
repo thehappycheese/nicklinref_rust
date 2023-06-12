@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased] 2023-06-12
+
+- drop support for case insensitive query
+
 ## [0.10.2] 2023-06-11
 
 - Refactoring to make main.rs short and easy to understand and decouple

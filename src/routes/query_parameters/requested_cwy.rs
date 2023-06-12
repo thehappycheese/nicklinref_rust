@@ -16,6 +16,12 @@ pub enum RequestedCwy {
     LRS,
 }
 
+impl Default for RequestedCwy {
+    fn default() -> Self {
+        RequestedCwy::LRS
+    }
+}
+
 impl From<u8> for RequestedCwy {
     fn from(item: u8) -> Self {
         match item {
