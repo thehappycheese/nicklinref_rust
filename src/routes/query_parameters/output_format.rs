@@ -2,7 +2,7 @@ use serde;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum OutputFormat {
     GEOJSON,
     WKT,
