@@ -1,9 +1,12 @@
-use super::RequestedCwy;
-use super::OutputFormat;
+use serde::Deserialize;
 
 use crate::helpers::serde_helpers::{f32_finite_or_fail, f32_finite_or_zero};
 
-#[derive(serde::Deserialize, Debug, PartialEq)]
+use super::RequestedCwy;
+use super::OutputFormat;
+
+
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct QueryParametersPoint {
     /// road number (eg "H001")
 	pub road: String,
@@ -107,6 +110,17 @@ mod tests {
     /// SLK NaN should fail to parse and reject the query
     fn test_query_parameters_point_slk_nan() {
         let query = "road=H001&slk=nan&offset=10";
+        let query:Result<QueryParametersPoint, _> = serde_urlencoded::from_str(query);
+        assert!(query.is_err());
+    }
+
+    #[test]
+    /// m=true fails
+    /// TODO: for json, geojson, and wkt, there is no reason this needs to fail
+    ///       m=true is experimental and not yet implemented. Probably it is a
+    ///       junk feature, i have never used it in practice. I should get rid of it.
+    fn test_query_parameters_point_m_not_permitted() {
+        let query = "road=H001&slk=5&m=true";
         let query:Result<QueryParametersPoint, _> = serde_urlencoded::from_str(query);
         assert!(query.is_err());
     }
