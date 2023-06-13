@@ -5,7 +5,7 @@ use serde::de::{Deserialize, Deserializer, Visitor};
 use std::fmt;
 use std::iter::IntoIterator;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum RequestedCwy {
     L,
     R,
