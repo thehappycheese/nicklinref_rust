@@ -7,7 +7,7 @@ use super::OutputFormat;
 
 
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct QueryParametersLine {
     /// Road number
 	pub road: String,
