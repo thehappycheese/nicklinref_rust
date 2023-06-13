@@ -37,6 +37,21 @@ impl From<u8> for RequestedCwy {
     }
 }
 
+impl Into<u8> for RequestedCwy {
+    fn into(self) -> u8 {
+        match self {
+            RequestedCwy::L   => 0b0000_0100,
+            RequestedCwy::R   => 0b0000_0001,
+            RequestedCwy::S   => 0b0000_0010,
+            RequestedCwy::LR  => 0b0000_0101,
+            RequestedCwy::LS  => 0b0000_0110,
+            RequestedCwy::RS  => 0b0000_0011,
+            RequestedCwy::LRS => 0b0000_0111,
+        }
+    }
+}
+
+
 impl IntoIterator for &RequestedCwy {
     type Item = Cwy;
     type IntoIter = std::vec::IntoIter<Self::Item>;
