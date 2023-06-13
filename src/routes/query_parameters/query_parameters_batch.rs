@@ -78,6 +78,8 @@ impl TryFrom<bytes::Bytes> for QueryParameterBatch {
 
 #[cfg(test)]
 mod tests {
+    use super::super::RequestedCwy;
+
     use super::*;
 
     use bytes::{BytesMut, BufMut};
@@ -95,8 +97,7 @@ mod tests {
         buffer.put_slice(&query_parameters_line.slk_from.to_le_bytes());
         buffer.put_slice(&query_parameters_line.slk_to.to_le_bytes());
         buffer.put_slice(&query_parameters_line.offset.to_le_bytes());
-        buffer.put_u8(query_parameters_line.cwy as u8);
-
+        buffer.put_u8(query_parameters_line.cwy.into());
         // Convert BytesMut into Bytes
         buffer.freeze()
     }
@@ -114,7 +115,7 @@ mod tests {
             f: OutputFormat::JSON,
         };
 
-        let binary = create_sample_binary(sample.copy());
+        let binary = create_sample_binary(sample.clone());
 
         match QueryParameterBatch::try_from(binary) {
             Ok(batch) => assert_eq!(batch.0[0], sample),
