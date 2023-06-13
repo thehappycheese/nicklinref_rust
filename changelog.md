@@ -3,6 +3,8 @@
 ## [Unreleased] 2023-06-12
 
 - drop support for case insensitive query
+- slk_from and slk_to are now option. One or either can be omitted to get the road "up to" or "starting from" its endpoints
+- TODO: Considering deprecation of `m` feature
 
 ## [0.10.2] 2023-06-11
 

@@ -129,27 +129,27 @@ The  parameters are summarised in the table below:
 
 ### 4.1. Get Lines - Query Parameters
 
-| Name       | Description                                                                                                       | Allowed Values                                                                     | Example                     | Required | Default   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------- | -------- | --------- |
-| `road`     | Road Number                                                                                                       | Valid Road/PSP Number (See [supported network types](#72-supported-network-types)) | `road=H001`                 | ✔️        | -         |
-| `slk_from` | [SLK](#71-slk-true-distance-and-chainage) to start the segment                                                    | Positive Number                                                                    | `slk_from=1.55`             | ✔️        | -         |
-| `slk_to`   | [SLK](#71-slk-true-distance-and-chainage) to end the segment                                                      | Positive Number<br>(>&nbsp;`slk_from`)                                             | `slk_to=2.3`                | ✔️        | -         |
-| `cwy`      | Filter for the carriageway.<br>See [`cwy` Parameter](#431-cwy-parameter)                                          | `L` `R` `S` `LS` `RS` `LR` `LRS`                                                   | `cwy=RS`                   |          | `LRS`     |
-| `offset`   | Metres to offset the resulting line from the road centre line.<br>See [`offset` Parameter](#432-offset-parameter) | Positive or Negative Number<br><i>Note: Large values can cause blank output</i>                         | `offset=4` or `offset=-3.5` |          | `0`       |
-| `f`        | Desired response format                                                                                           | `geojson` `wkt` `json`                                                             | `f=geojson`                 |          | `geojson` |
-| `m`        | EXPERIMENTAL<br>Option to include `M` linear slk coordinates.                                                     | `true` `false`                                                                     | `m=true`                    |          | `false`   |
+| Name       | Description                                                                                                       | Allowed Values                                                                       | Example         | Required | Default   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------- | -------- | --------- |
+| `road`     | Road Number                                                                                                       | Valid Road / PSP Number (See [supported network types](#72-supported-network-types)) | `road=H001`     | ✔️        | -         |
+| `slk_from` | [SLK](#71-slk-true-distance-and-chainage) to start the segment                                                    | Positive Number                                                                      | `slk_from=1.55` |          | -Infinity |
+| `slk_to`   | [SLK](#71-slk-true-distance-and-chainage) to end the segment                                                      | Positive Number<br>(>&nbsp;`slk_from`)                                               | `slk_to=2.3`    |          | +Infinity |
+| `cwy`      | Filter for the carriageway.<br>See [`cwy` Parameter](#431-cwy-parameter)                                          | `L` `R` `S` `LS` `RS` `LR` `LRS`                                                     | `cwy=RS`        |          | `LRS`     |
+| `offset`   | Metres to offset the resulting line from the road centre line.<br>See [`offset` Parameter](#432-offset-parameter) | Positive or Negative Number<br><i>Note: Large values can cause blank output</i>      | `offset=-3.5`   |          | `0`       |
+| `f`        | Desired response format                                                                                           | `geojson` `wkt` `json`                                                               | `f=geojson`     |          | `geojson` |
+| `m`        | EXPERIMENTAL<br>Option to include `M` linear slk coordinates.                                                     | `true` `false`                                                                       | `m=true`        |          | `false`   |
 
 > All parameters and values are case sensitive
 
 ### 4.2. Get Points - Query Parameters
 
-| Name     | Description                                                                                                        | Allowed Values                                                                     | Example     | Required | Default   |
-| -------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ----------- | -------- | --------- |
-| `road`   | Road Number                                                                                                        | Valid Road/PSP Number (See [supported network types](#72-supported-network-types)) | `road=H001` | ✔️        | -         |
-| `slk`    | [SLK](#71-slk-true-distance-and-chainage) of the point                                                             | Positive Number                                                                    | `slk=3`     | ✔️        | -         |
-| `cwy`    | Filter for the carriageway. <br>See [`cwy` Parameter](#431-cwy-parameter)                                          | `L` `R` `S` `LS` `RS` `LR` `LRS`                                                   | `cwy=RS`   |          | `LRS`     |
-| `offset` | Metres to offset the resulting point from the road centre line.<br>See [`offset` Parameter](#432-offset-parameter) | Positive or Negative Number<br><i>Note: Large values can cause blank output</i>    | `offset=4`  |          | `0`       |
-| `f`      | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)              | `geojson` `wkt` `json` `latlon` `latlondir`                                        | `f=geojson` |          | `geojson` |
+| Name     | Description                                                                                                        | Allowed Values                                                                       | Example     | Required | Default   |
+| -------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ----------- | -------- | --------- |
+| `road`   | Road Number                                                                                                        | Valid Road / PSP Number (See [supported network types](#72-supported-network-types)) | `road=H001` | ✔️        | -         |
+| `slk`    | [SLK](#71-slk-true-distance-and-chainage) of the point                                                             | Positive Number                                                                      | `slk=3`     | ✔️        | -         |
+| `cwy`    | Filter for the carriageway. <br>See [`cwy` Parameter](#431-cwy-parameter)                                          | `L` `R` `S` `LS` `RS` `LR` `LRS`                                                     | `cwy=RS`    |          | `LRS`     |
+| `offset` | Metres to offset the resulting point from the road centre line.<br>See [`offset` Parameter](#432-offset-parameter) | Positive or Negative Number<br><i>Note: Large values can cause blank output</i>      | `offset=4`  |          | `0`       |
+| `f`      | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)              | `geojson` `wkt` `json` `latlon` `latlondir`                                          | `f=geojson` |          | `geojson` |
 
 > All parameters and values are case sensitive
 

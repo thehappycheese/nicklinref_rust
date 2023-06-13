@@ -21,3 +21,13 @@ where D:Deserializer<'de>{
         _ => Err(serde::de::Error::custom("must be a finite number")) // malformed input
     }
 }
+
+/// Fail on nan or infinite values
+pub fn f32_not_nan_or_fail<'de, D>(deserializer: D) -> Result<f32, D::Error>
+where D:Deserializer<'de>{
+    let result = f32::deserialize(deserializer)?;
+    match result {
+        result if result.is_nan() => Err(serde::de::Error::custom("must not be nan")), // malformed input
+        result => Ok(result)
+    }
+}
