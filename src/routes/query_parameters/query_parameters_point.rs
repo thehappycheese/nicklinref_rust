@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     /// SLK NaN should fail to parse and reject the query
-    fn test_query_parameters_prevent_slk_nan() {
+    fn test_query_parameters_point_slk_nan() {
         let query = "road=H001&slk=nan&offset=10";
         let query:Result<QueryParametersPoint, _> = serde_urlencoded::from_str(query);
         assert!(query.is_err());
