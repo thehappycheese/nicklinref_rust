@@ -491,7 +491,7 @@ nicklinref.exe --help
 Usage: nicklinref [OPTIONS]
 
 Options:
-      --addr <NLR_ADDR>
+      --ip-address <NLR_ADDR>
           The IP address to listen on [env: NLR_ADDR=] [default: 127.0.0.1]
       --port <NLR_PORT>
           The port to listen on [env: NLR_PORT=] [default: 8080]

@@ -12,7 +12,7 @@ use clap::Parser;
 pub struct Settings {
     /// The IP address to listen on
     #[clap(
-        long="addr",
+        long="ip-address",
         env="NLR_ADDR",
         default_value_t = IpAddr::V4(Ipv4Addr::new(127,0,0,1)),
     )]
