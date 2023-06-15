@@ -7,6 +7,7 @@
   road "up to" or "starting from" its endpoints
 - Changed CLI `--addr` to `--ip-address` because abbreviations are annoying
 - reject requests with unknown fields (for example if `cwy=` is misspelled as `cway=`)
+- fixed `x-request-id` now echo's properly on rejection
 
 ## [0.10.2] 2023-06-11
 
