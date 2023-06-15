@@ -7,6 +7,7 @@ use super::OutputFormat;
 
 
 #[derive(Deserialize, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct QueryParametersPoint {
     /// road number (eg "H001")
 	pub road: String,
@@ -121,6 +122,15 @@ mod tests {
     ///       junk feature, i have never used it in practice. I should get rid of it.
     fn test_query_parameters_point_m_not_permitted() {
         let query = "road=H001&slk=5&m=true";
+        let query:Result<QueryParametersPoint, _> = serde_urlencoded::from_str(query);
+        assert!(query.is_err());
+    }
+
+
+    #[test]
+    /// don't allow unknown fields (eg misspelling `cwy=` as `cway=`)
+    fn test_query_parameters_point_deny_unknown_fields() {
+        let query = "road=H001&slk=5&cway=L";
         let query:Result<QueryParametersPoint, _> = serde_urlencoded::from_str(query);
         assert!(query.is_err());
     }

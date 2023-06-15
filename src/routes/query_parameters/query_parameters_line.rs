@@ -8,6 +8,7 @@ use super::OutputFormat;
 
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct QueryParametersLine {
     /// Road number
 	pub road: String,
@@ -164,6 +165,14 @@ mod tests {
         assert!(query.is_err());
 
         let query = "road=H001&slk_from=nan&slk_to=1";
+        let query:Result<QueryParametersLine, _> = serde_urlencoded::from_str(query);
+        assert!(query.is_err());
+    }
+
+    #[test]
+    /// don't allow unknown fields (eg misspelling `cwy=` as `cway=`)
+    fn test_query_parameters_line_disallow_unknown_fields() {
+        let query = "road=H001&cway=L";
         let query:Result<QueryParametersLine, _> = serde_urlencoded::from_str(query);
         assert!(query.is_err());
     }

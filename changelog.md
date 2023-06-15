@@ -6,7 +6,7 @@
 - slk_from and slk_to are now option. One or either can be omitted to get the
   road "up to" or "starting from" its endpoints
 - Changed CLI `--addr` to `--ip-address` because abbreviations are annoying
-- TODO: Considering deprecation of `m` feature
+- reject requests with unknown fields (for example if `cwy=` is misspelled as `cway=`)
 
 ## [0.10.2] 2023-06-11
 
