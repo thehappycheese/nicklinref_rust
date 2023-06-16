@@ -3,7 +3,6 @@ use clap::Parser;
 use warp::{Filter, wrap_fn, Reply, reply::Response, filters::BoxedFilter, fs::File};
 
 mod helpers;
-use helpers::echo_x_request_id;
 
 mod routes;
 

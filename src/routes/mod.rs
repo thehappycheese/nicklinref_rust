@@ -1,5 +1,8 @@
 mod geoprocessing;
 
+mod echo_x_request_id;
+pub use echo_x_request_id::echo_x_request_id;
+
 pub mod query_parameters;
 
 mod lines;
