@@ -1,6 +1,8 @@
 
 # NickLinRef <!-- omit in toc -->
 
+![dev tests passing](https://github.com/thehappycheese/nicklinref_rust/actions/workflows/rust.yml/badge.svg)
+
 NickLinRef is designed to accurately extract portions of the
 [Western Australia Road Network](https://catalogue.data.wa.gov.au/dataset/mrwa-road-network)
 geometry using `road/slk_from/slk_to` or just `road/slk`. You can query this

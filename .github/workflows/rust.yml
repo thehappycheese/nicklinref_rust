@@ -1,4 +1,4 @@
-name: Rust
+name: "dev: build / test"
 
 on:
   pull_request:
