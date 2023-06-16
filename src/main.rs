@@ -13,6 +13,7 @@ use data::IndexedData;
 mod settings;
 use settings::Settings;
 
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     
@@ -42,6 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             route_lines_batch
             .with(warp::compression::gzip())
         )
+        .recover(routes::custom_rejection_handler)
         .with(wrap_fn(echo_x_request_id))
     );
 
@@ -49,5 +51,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let address:SocketAddr = (settings.NLR_ADDR, settings.NLR_PORT).into();
     println!("Serving at {:?}", address);
     warp::serve(filter).run(address).await;
+
     Ok(())
 }

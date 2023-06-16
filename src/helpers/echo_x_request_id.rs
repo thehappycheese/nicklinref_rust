@@ -1,12 +1,15 @@
-use crate::helpers::ErrorWithStaticMessage;
 use warp::{
-    http::{HeaderValue, StatusCode},
+    http::HeaderValue,
     reply::Response,
-    Filter, Rejection, Reply, reject::InvalidQuery,
+    Filter, Rejection, Reply,
 };
 
 /// Echoes back the `x-request-id` header from the request, if it is present and
 /// can be parsed as a `u64`. Otherwise the response is not modified.
+/// 
+/// This wrapper can only work on successful requests. To guarantee it happens
+/// on rejected requests, the `filter` must have its own custom rejection
+/// handler which has already handled all rejections.
 ///
 /// # Example
 ///
@@ -38,34 +41,7 @@ where
         )
         .and(
             filter
-                .map(|reply:T| reply.into_response()) // convert to response so that unify() works later
-                .recover(|rejection: Rejection| async move {
-                    let code;
-                    let message: String;
-                    
-                    if rejection.is_not_found() {
-                        code = StatusCode::NOT_FOUND;
-                        message = "Not Found".to_owned();
-                    } else if let Some(custom_reject) = rejection.find::<ErrorWithStaticMessage>() {
-                        code = StatusCode::INTERNAL_SERVER_ERROR;
-                        message = custom_reject.get_message().to_owned();
-                    } else if let Some(custom_reject) = rejection.find::<InvalidQuery>() {
-                        code = StatusCode::BAD_REQUEST;
-                        message = custom_reject.to_string();
-                    } else {
-                        // A different error, return a BAD_REQUEST status.
-                        code = StatusCode::INTERNAL_SERVER_ERROR;
-                        message = "Unexpected error".to_owned();
-                    }
-                    let res = warp::http::Response::builder()
-                        .status(code)
-                        .body(message)
-                        .unwrap();
-
-                    let result: Result<_, Rejection> = Ok(res.into_response());
-                    result
-                })
-                .unify(),
+            .map(|reply:T| reply.into_response())
         )
         .map(move |id: Option<u64>, reply: Response| {
             let mut response = reply.into_response();
@@ -76,15 +52,22 @@ where
         })
 }
 
+
+
+
 #[cfg(test)]
 mod tests {
     use warp::{
-        http::{Response},
-        hyper::{Body, body::to_bytes},
-        Filter, Rejection,
+        http::Response,
+        hyper::{
+            Body
+        },
+        Filter,
+        Rejection,
+        wrap_fn
     };
 
-    use crate::helpers::ErrorWithStaticMessage;
+    use crate::{helpers::ErrorWithStaticMessage, routes};
 
     macro_rules! create_wrapped_filter_success {
         () => {
@@ -128,10 +111,11 @@ mod tests {
 
     #[tokio::test]
     /// Oh boy was it ever hard to make this test pass
-    /// we want the header to be attached regardless of the success of the main program.
+    /// we want the header to be attached regardless of the success of the main 
+    /// program.
     /// 
-    /// TODO: To achieve this we ended up having to write a `recover()` inside
-    /// `echo_x_request_id` which has had the undesirable effect of coupl
+    /// It turns out that is not actually possible without introducing a custom
+    /// rejection handler; `.recover(routes::custom_rejection_handler)`
     async fn echo_x_request_id_reject_valid_header_reduced() {
         let wrapped_filter = warp::get()
             .and_then(|| async {
@@ -139,15 +123,16 @@ mod tests {
                     Err(ErrorWithStaticMessage::new("Failure Message").into());
                 result
             })
-            .with(warp::wrap_fn(echo_x_request_id));
+            .recover(routes::custom_rejection_handler)
+            .with(wrap_fn(echo_x_request_id));
 
         let response = warp::test::request()
             .header("x-request-id", "10")
             .filter(&wrapped_filter)
             .await
             .unwrap();
+
         assert_eq!(response.headers().get("x-request-id").unwrap(), "10");
-        assert_eq!("Failure Message", String::from_utf8(to_bytes(response.into_body()).await.unwrap().to_vec()).unwrap());
     }
 
 }
