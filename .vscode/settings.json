@@ -1,13 +1,21 @@
 {
     "cSpell.words": [
         "chainage",
+        "latlon",
         "linestring",
+        "megalinref",
+        "multilinestring",
         "nicklinref",
         "nickslinetoolsrust",
         "polyline",
-        "reqwest"
+        "reqwest",
+        "webservice"
     ],
     "editor.insertSpaces": true,
     "editor.detectIndentation": false,
-    "cSpell.language": "en-GB"
+    "cSpell.language": "en-GB",
+    "markdownlint.config": {
+        "MD033": false,
+        "MD028":false
+    }
 }

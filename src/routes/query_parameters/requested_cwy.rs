@@ -1,11 +1,11 @@
 use crate::data::esri_serde::Cwy;
 use serde;
-use serde::de::{Deserialize, Deserializer, Visitor};
+use serde::de::{Deserialize, Deserializer, Visitor, Error};
 
 use std::fmt;
 use std::iter::IntoIterator;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum RequestedCwy {
     L,
     R,
@@ -14,6 +14,12 @@ pub enum RequestedCwy {
     LS,
     RS,
     LRS,
+}
+
+impl Default for RequestedCwy {
+    fn default() -> Self {
+        RequestedCwy::LRS
+    }
 }
 
 impl From<u8> for RequestedCwy {
@@ -30,6 +36,21 @@ impl From<u8> for RequestedCwy {
         }
     }
 }
+
+impl Into<u8> for RequestedCwy {
+    fn into(self) -> u8 {
+        match self {
+            RequestedCwy::L   => 0b0000_0100,
+            RequestedCwy::R   => 0b0000_0001,
+            RequestedCwy::S   => 0b0000_0010,
+            RequestedCwy::LR  => 0b0000_0101,
+            RequestedCwy::LS  => 0b0000_0110,
+            RequestedCwy::RS  => 0b0000_0011,
+            RequestedCwy::LRS => 0b0000_0111,
+        }
+    }
+}
+
 
 impl IntoIterator for &RequestedCwy {
     type Item = Cwy;
@@ -87,7 +108,7 @@ impl<'de> Deserialize<'de> for RequestedCwy {
                     "LS" => RequestedCwy::LS,
                     "RS" => RequestedCwy::RS,
                     "LRS" => RequestedCwy::LRS,
-                    _ => RequestedCwy::LRS,
+                    _ => return Err(Error::custom("Invalid carriageway filter")),
                 })
             }
         }

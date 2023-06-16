@@ -39,7 +39,7 @@ impl IndexedData {
         
         // try to get the first letter of the road name
         let first_letter = road_name.chars().next().ok_or(
-            ErrorWithStaticMessage::new("Road Lookup Failed. First letter of road did not match any in lookup table.")
+            ErrorWithStaticMessage::new("Road Lookup Failed. First letter of 'road' did not match any in lookup table.")
         )?;
         
         // lookup the list of roads that start with that letter
@@ -49,7 +49,7 @@ impl IndexedData {
 
         // find the matching road
         roads_with_first_letter.get(road_name).ok_or(
-            ErrorWithStaticMessage::new("Road Lookup Failed. Name not found in second level lookup table.")
+            ErrorWithStaticMessage::new("Road Lookup Failed. 'road' not found in second level lookup table.")
         )
     }
 

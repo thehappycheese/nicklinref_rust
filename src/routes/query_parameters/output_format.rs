@@ -2,7 +2,7 @@ use serde;
 use serde::de::{Deserialize, Deserializer, Visitor};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum OutputFormat {
     GEOJSON,
     WKT,
@@ -11,12 +11,19 @@ pub enum OutputFormat {
     LATLONDIR,
 }
 
+impl Default for OutputFormat {
+    fn default() -> Self {
+        OutputFormat::GEOJSON
+    }
+}
+
 impl<'de> Deserialize<'de> for OutputFormat {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         struct VariantVisitor;
+
         impl<'de> Visitor<'de> for VariantVisitor {
             type Value = OutputFormat;
 
@@ -39,6 +46,7 @@ impl<'de> Deserialize<'de> for OutputFormat {
                 })
             }
         }
-        deserializer.deserialize_string(VariantVisitor)
+
+        deserializer.deserialize_str(VariantVisitor)
     }
 }

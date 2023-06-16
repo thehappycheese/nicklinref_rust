@@ -21,3 +21,8 @@ nickslinetoolsrust = { git = "https://github.com/thehappycheese/nicks_line_tools
 lz-fear = "0.1.1"
 figment = { version = "0.10.10", features = ["json", "env"] }
 clap = { version = "4.3.2", features = ["derive", "env"] }
+
+[dev-dependencies]
+byteorder = "1.4.3"
+flate2 = "1.0.26"
+serde_urlencoded = "0.7.1"
