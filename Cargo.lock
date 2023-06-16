@@ -725,6 +725,7 @@ dependencies = [
  "bytes",
  "clap",
  "figment",
+ "flate2",
  "lz-fear",
  "nickslinetoolsrust",
  "reqwest",
