@@ -1,6 +1,6 @@
 use crate::data::esri_serde::Cwy;
 use serde;
-use serde::de::{Deserialize, Deserializer, Visitor};
+use serde::de::{Deserialize, Deserializer, Visitor, Error};
 
 use std::fmt;
 use std::iter::IntoIterator;
@@ -108,7 +108,7 @@ impl<'de> Deserialize<'de> for RequestedCwy {
                     "LS" => RequestedCwy::LS,
                     "RS" => RequestedCwy::RS,
                     "LRS" => RequestedCwy::LRS,
-                    _ => RequestedCwy::LRS,
+                    _ => return Err(Error::custom("Invalid carriageway filter")),
                 })
             }
         }
