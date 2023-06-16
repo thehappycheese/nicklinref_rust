@@ -55,24 +55,34 @@ mod main_tests {
 
         // run a bunch of tests in this one function
 
+        println!("test: Empty GET should return invalid query");
         let result = warp::test::request().filter(&filter).await.unwrap();
-        println!("{:?}", result);
         assert!(result.status().is_client_error());
 
+        println!("test: Minimal query should succeed");
         let result = warp::test::request().method("GET").path("/?road=H015").filter(&filter).await.unwrap();
-        println!("{:?}", result);
         assert!(result.status().is_success());
 
+        println!("test: Invalid query parameter value should reject");
         let result = warp::test::request().method("GET").path("/?road=H015&cwy=2").filter(&filter).await.unwrap();
-        println!("{:?}", result);
         assert!(result.status().is_client_error());
 
+        println!("test: Invalid query parameter name should reject");
         let result = warp::test::request().method("GET").path("/?road=H015&cway=L").filter(&filter).await.unwrap();
-        println!("{:?}", result);
         assert!(result.status().is_client_error());
 
-        // invalid method
+        println!("test: Invalid HTTP method should reject");
         let result = warp::test::request().method("POST").path("/?road=H015").filter(&filter).await.unwrap();
         assert!(result.status().is_client_error());
+
+        println!("test: Valid request should echo x-request-id");
+        let result = warp::test::request().header("x-request-id", "10").path("/?road=H015").filter(&filter).await.unwrap();
+        assert!(result.headers().get("x-request-id").map_or(false, |header| header=="10"));
+
+        println!("test: Rejected request should still echo x-request-id");
+        let result = warp::test::request().header("x-request-id", "11").path("/?road=H000").filter(&filter).await.unwrap();
+        assert!(result.headers().get("x-request-id").map_or(false, |header| header=="11"));
+    }
+
     }
 }
