@@ -84,5 +84,43 @@ mod main_tests {
         assert!(result.headers().get("x-request-id").map_or(false, |header| header=="11"));
     }
 
+
+
+    // Lets do a quick one for /batch/
+    use byteorder::{WriteBytesExt, LittleEndian};
+
+    fn binary_encode_request(road: &str, slk_from: f32, slk_to: f32, offset: f32, cwy: RequestedCwy) -> Vec<u8> {
+        let road_bytes = road.as_bytes();
+        let road_name_length = road_bytes.len() as u8;
+
+        let mut buffer = Vec::with_capacity(1 + road_bytes.len() + 4 + 4 + 4 + 1);
+
+        buffer.push(road_name_length);
+        buffer.extend_from_slice(road_bytes);
+
+        let mut wtr = vec![];
+        wtr.write_f32::<LittleEndian>(slk_from).unwrap();
+        wtr.write_f32::<LittleEndian>(slk_to).unwrap();
+        wtr.write_f32::<LittleEndian>(offset).unwrap();
+
+        buffer.append(&mut wtr);
+        buffer.push(cwy.into());
+
+        buffer
     }
+
+    #[tokio::test]
+    async fn batch_request_test(){
+        
+        let filter = setup_routes_for_testing!();
+
+        let req = binary_encode_request("H015", 0.0, 0.1, 0.0, RequestedCwy::L);
+        println!("{:?}", req);
+
+        println!("test: Rejected empty batch request");
+        let result = warp::test::request().method("POST").path("/batch/").filter(&filter).await.unwrap();
+        println!("{:?}", result);
+        assert!(result.status().is_client_error());
+    }
+
 }
