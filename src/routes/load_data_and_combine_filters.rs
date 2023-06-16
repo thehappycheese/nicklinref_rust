@@ -4,7 +4,7 @@ use warp::{Filter, wrap_fn, filters::BoxedFilter, reply::Response, fs::File, Rep
 
 use crate::{data::IndexedData, settings::Settings};
 
-pub async fn load_data_and_get_combined_routes(settings:&Settings) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
+pub async fn load_data_and_combine_filters(settings:&Settings) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
 
     // Load data
     let indexed_data:Arc<_> = IndexedData::load(
@@ -13,14 +13,17 @@ pub async fn load_data_and_get_combined_routes(settings:&Settings) -> Result<Box
         &settings.NLR_FORCE_UPDATE_DATA
     ).await?.into();
 
-    let route_static_folder = warp::fs::dir(settings.NLR_STATIC_HTTP.clone());
-    let route_show = warp::path("show").and(route_static_folder);
-    let route_lines = super::lines(indexed_data.clone());
-    let route_points = super::points(indexed_data.clone());
-    let route_lines_batch = super::lines_batch(indexed_data.clone());
+    // define each "filter" (aka "route")  of the server
+    // each filter corresponds to a feature or capability
+    let filter_static_folder = warp::fs::dir(settings.NLR_STATIC_HTTP.clone());
+    let filter_show          = warp::path("show").and(filter_static_folder);
+    let filter_lines         = super::lines(indexed_data.clone());
+    let route_points         = super::points(indexed_data.clone());
+    let route_lines_batch    = super::lines_batch(indexed_data.clone());
 
-    let x = route_show.map(|r:File| r.into_response()).or(
-        route_lines
+    // chain filters together into a single filter
+    let x = filter_show.map(|r:File| r.into_response()).or(
+        filter_lines
         .or(route_points)
         .or(
             route_lines_batch
@@ -42,7 +45,7 @@ mod main_tests {
 
     /// every test is compiled and executed in a sandbox
     /// rust does not natively support fixtures for testing
-    macro_rules! setup_routes_for_testing {
+    macro_rules! setup_filter_for_testing {
         () => {
             // modified settings for testing
             //  - prevent saving the data file by providing an empty filepath
@@ -60,7 +63,7 @@ mod main_tests {
     #[tokio::test]
     async fn basic_tests() {
         // download data and build routes
-        let filter = setup_routes_for_testing!();
+        let filter = setup_filter_for_testing!();
 
         // run a bunch of tests in this one function
 
@@ -121,7 +124,7 @@ mod main_tests {
     #[tokio::test]
     async fn batch_request_test(){
         
-        let filter = setup_routes_for_testing!();
+        let filter = setup_filter_for_testing!();
 
         let req = binary_encode_request("H015", 0.0, 0.1, 0.0, RequestedCwy::L);
         println!("{:?}", req);
