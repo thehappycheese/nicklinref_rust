@@ -39,19 +39,25 @@ pub async fn load_data_and_combine_filters(settings:&Settings) -> Result<BoxedFi
 
 
 #[cfg(test)]
-mod main_tests {
+mod tests {
     use super::*;
     use crate::routes::query_parameters::RequestedCwy;
+    use byteorder::{WriteBytesExt, LittleEndian};
+    use std::io::Read;
+    use flate2::read::GzDecoder;
 
     /// every test is compiled and executed in a sandbox
-    /// rust does not natively support fixtures for testing
+    /// rust does not natively support fixtures for testing (yet?)
+    /// So, although we can make a macro to avoid code repetition,
+    /// we cannot avoid running this initialisation once for every
+    /// individual test.
     macro_rules! setup_filter_for_testing {
         () => {
             // modified settings for testing
             //  - prevent saving the data file by providing an empty filepath
             //  - set data source url to download a small subset of data
             //    (The first 5-ish kilometres of H015)
-            load_data_and_get_combined_routes(&Settings {
+            load_data_and_combine_filters(&Settings {
                 NLR_DATA_FILE: "".to_owned(), 
                 NLR_DATA_SOURCE_URL: "https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=ROAD%3D%27H015%27%20and%20END_SLK%3C5&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json".to_owned(),
                 ..Settings::default()
@@ -96,43 +102,54 @@ mod main_tests {
         assert!(result.headers().get("x-request-id").map_or(false, |header| header=="11"));
     }
 
-
-
-    // Lets do a quick one for /batch/
-    use byteorder::{WriteBytesExt, LittleEndian};
-
-    fn binary_encode_request(road: &str, slk_from: f32, slk_to: f32, offset: f32, cwy: RequestedCwy) -> Vec<u8> {
-        let road_bytes = road.as_bytes();
-        let road_name_length = road_bytes.len() as u8;
-
-        let mut buffer = Vec::with_capacity(1 + road_bytes.len() + 4 + 4 + 4 + 1);
-
-        buffer.push(road_name_length);
-        buffer.extend_from_slice(road_bytes);
-
-        let mut wtr = vec![];
-        wtr.write_f32::<LittleEndian>(slk_from).unwrap();
-        wtr.write_f32::<LittleEndian>(slk_to).unwrap();
-        wtr.write_f32::<LittleEndian>(offset).unwrap();
-
-        buffer.append(&mut wtr);
-        buffer.push(cwy.into());
-
-        buffer
-    }
-
     #[tokio::test]
+    /// TODO: so far very primitive tests for /batch/
     async fn batch_request_test(){
         
         let filter = setup_filter_for_testing!();
 
-        let req = binary_encode_request("H015", 0.0, 0.1, 0.0, RequestedCwy::L);
+        /// A quick function to serialise a single request
+        fn binary_encode_request(road: &str, slk_from: f32, slk_to: f32, offset: f32, cwy: RequestedCwy) -> Vec<u8> {
+            let road_bytes = road.as_bytes();
+            let road_name_length = road_bytes.len() as u8;
+    
+            let mut buffer = Vec::with_capacity(1 + road_bytes.len() + 4 + 4 + 4 + 1);
+    
+            buffer.push(road_name_length);
+            buffer.extend_from_slice(road_bytes);
+    
+            let mut wtr = vec![];
+            wtr.write_f32::<LittleEndian>(slk_from).unwrap();
+            wtr.write_f32::<LittleEndian>(slk_to).unwrap();
+            wtr.write_f32::<LittleEndian>(offset).unwrap();
+    
+            buffer.append(&mut wtr);
+            buffer.push(cwy.into());
+    
+            buffer
+        }
+        
+        
+
+        let req:Vec<u8> = binary_encode_request("H015", 0.1, 0.2, 0.0, RequestedCwy::L);
         println!("{:?}", req);
 
-        println!("test: Rejected empty batch request");
+        println!("test: Empty batch request");
         let result = warp::test::request().method("POST").path("/batch/").filter(&filter).await.unwrap();
-        println!("{:?}", result);
-        assert!(result.status().is_client_error());
+        let bytes = warp::hyper::body::to_bytes(result.into_body()).await.unwrap();
+        let mut gz = GzDecoder::new(&*bytes);
+        let mut s = String::new();
+        let _size = gz.read_to_string(&mut s).unwrap();
+        assert_eq!(s, "[]");
+        
+        println!("test: Test normal batch request");
+        let result = warp::test::request().method("POST").path("/batch/").body(req).filter(&filter).await.unwrap();
+        let bytes = warp::hyper::body::to_bytes(result.into_body()).await.unwrap();
+        let mut gz = GzDecoder::new(&*bytes);
+        let mut s = String::new();
+        let _size = gz.read_to_string(&mut s).unwrap();
+        println!("{:}",s);
+        assert_eq!(s[..3].to_string(), "[[[");
     }
 
 }
