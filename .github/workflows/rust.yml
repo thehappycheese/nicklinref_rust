@@ -1,8 +1,10 @@
-name: "dev: build / test"
+name: "build / test"
 
 on:
+  push:
+    branches: [ "main" ]
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
