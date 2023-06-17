@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::helpers::serde_helpers::{f32_finite_or_fail, f32_finite_or_zero};
 
 use super::RequestedCwy;
-use super::OutputFormat;
+use super::output_format::OutputFormatPoints;
 
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -27,7 +27,7 @@ pub struct QueryParametersPoint {
 
 	#[serde(default)]
     /// format of the response
-	pub f: OutputFormat,
+	pub f: OutputFormatPoints,
 
 }
 
@@ -48,7 +48,7 @@ mod tests {
             cwy: RequestedCwy::LRS,
             slk: 5.0,
             offset: 0.0,
-            f: OutputFormat::GEOJSON,
+            f: OutputFormatPoints::geojson,
         });
     }
 
@@ -62,7 +62,7 @@ mod tests {
             cwy: RequestedCwy::LS,
             slk: 5.0,
             offset: 10.0,
-            f: OutputFormat::WKT,
+            f: OutputFormatPoints::wkt,
         });
     }
 
@@ -76,7 +76,7 @@ mod tests {
             cwy: RequestedCwy::LRS,
             slk: 5.0,
             offset: 0.0,
-            f: OutputFormat::GEOJSON,
+            f: OutputFormatPoints::geojson,
         });
     }
 

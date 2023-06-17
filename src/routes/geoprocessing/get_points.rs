@@ -1,5 +1,5 @@
 use crate::data::IndexedData;
-use crate::routes::query_parameters::{OutputFormat, QueryParametersPoint};
+use crate::routes::query_parameters::{QueryParametersPoint, output_format::OutputFormatPoints};
 use nickslinetoolsrust::line_string_measured::LineStringMeasured;
 use nickslinetoolsrust::vector2::Vector2;
 use crate::helpers::{convert_metres_to_degrees, ErrorWithStaticMessage, mean_angle};
@@ -40,7 +40,7 @@ pub fn get_points(
 		});
 
 	match query.f {
-		OutputFormat::JSON => {
+		OutputFormatPoints::json => {
 			let points = features
 				.filter_map(|(vertex, _dir)| serde_json::to_string(&vertex).ok())
 				.collect::<Vec<String>>()
@@ -51,7 +51,7 @@ pub fn get_points(
 				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
-		OutputFormat::GEOJSON => {
+		OutputFormatPoints::geojson => {
 			let points = features
 				.filter_map(|(vertex, _dir)| serde_json::to_string(&vertex).ok())
 				.collect::<Vec<String>>()
@@ -67,7 +67,7 @@ pub fn get_points(
 				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
-		OutputFormat::WKT => {
+		OutputFormatPoints::wkt => {
 			let points = features
 				.map(|(vertex, _dir)| format!("({} {})", vertex.x, vertex.y))
 				.collect::<Vec<String>>()
@@ -78,7 +78,7 @@ pub fn get_points(
 				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		}
-		OutputFormat::LATLON => {
+		OutputFormatPoints::latlon => {
 			let vertexes: Vec<(Vector2,f64)> = features.collect();
 			if vertexes.len()>0{
 				let point = vertexes
@@ -90,7 +90,7 @@ pub fn get_points(
 				Err(ErrorWithStaticMessage::new("Found no points"))
 			}
 		},
-		OutputFormat::LATLONDIR => {
+		OutputFormatPoints::latlondir => {
 			let vertexes: Vec<(Vector2,f64)> = features.collect();
 			if vertexes.len()>0{
 				let point = vertexes

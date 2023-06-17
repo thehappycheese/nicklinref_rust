@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::helpers::serde_helpers::{f32_finite_or_zero, f32_not_nan_or_fail};
 
 use super::RequestedCwy;
-use super::OutputFormat;
+use super::output_format::OutputFormatLines;
 
 
 
@@ -34,7 +34,7 @@ pub struct QueryParametersLine {
 
 	#[serde(default)] // default GEOJSON
     /// The output data format to be returned by the server
-	pub f: OutputFormat,
+	pub f: OutputFormatLines,
 
 	#[serde(default)] // default false
     /// request that the linear referencing M coordinate should be included if
@@ -68,7 +68,7 @@ mod tests {
             slk_to: 6.0,
             offset: 0.0,
             cwy: RequestedCwy::LRS,
-            f: OutputFormat::GEOJSON,
+            f: OutputFormatLines::geojson,
             m: false,
         });
     }
@@ -85,7 +85,7 @@ mod tests {
             slk_to: f32::INFINITY,
             offset: 0.0,
             cwy: RequestedCwy::LRS,
-            f: OutputFormat::GEOJSON,
+            f: OutputFormatLines::geojson,
             m: false,
         });
     }
@@ -101,7 +101,7 @@ mod tests {
             slk_to: 6.0,
             cwy: RequestedCwy::LS,
             offset: 10.0,
-            f: OutputFormat::WKT,
+            f: OutputFormatLines::wkt,
             m:true
         });
     }
@@ -117,7 +117,7 @@ mod tests {
             slk_to: 6.0,
             cwy: RequestedCwy::LRS,
             offset: 0.0,
-            f: OutputFormat::GEOJSON,
+            f: OutputFormatLines::geojson,
             m: false,
         });
     }

@@ -9,6 +9,8 @@
 - reject requests with unknown fields (for example if `cwy=` is misspelled as `cway=`)
 - fixed `x-request-id` now echo's properly on rejection
 - invalid values of `cwy=` will now cause the request to be rejected
+- invalid values of `f=` will now cause the request to be rejected
+- `f=` is now case sensitive to match documentation
 
 ## [0.10.2] 2023-06-11
 
