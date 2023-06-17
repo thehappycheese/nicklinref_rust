@@ -11,8 +11,6 @@
 - invalid values of `cwy=` will now cause the request to be rejected
 - invalid values of `f=` will now cause the request to be rejected
 - `f=` is now case sensitive to match documentation
-- require `cwy=` to match the sort order listed in documentation `LS` can no
-  longer be specified as `SL`
 
 ## [0.10.2] 2023-06-11
 

@@ -55,6 +55,7 @@ mod tests {
     #[test]
     /// Test when all parameters are provided
     fn test_query_parameters_point_all() {
+        let query = "road=H001&slk=5&cwy=LS&offset=10&f=wkt";
         let query: QueryParametersPoint = serde_urlencoded::from_str(query).unwrap();
         assert_eq!(query, QueryParametersPoint{
             road: "H001".to_string(),

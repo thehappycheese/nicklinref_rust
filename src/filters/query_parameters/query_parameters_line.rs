@@ -93,6 +93,7 @@ mod tests {
     #[test]
     /// Test when all parameters are provided.
     fn test_query_parameters_line_all() {
+        let query = format!("{}&cwy=LS&offset=10&f=wkt&m=true", CONFIRMED_WORKING_MINIMUM);
         let query: QueryParametersLine = serde_urlencoded::from_str(&query).unwrap();
         assert_eq!(query, QueryParametersLine{
             road: "H001".to_string(),
