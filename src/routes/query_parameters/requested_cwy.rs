@@ -1,11 +1,7 @@
 use crate::data::esri_serde::Cwy;
-use serde;
-use serde::de::{Deserialize, Deserializer, Visitor, Error};
+use serde::Deserialize;
 
-use std::fmt;
-use std::iter::IntoIterator;
-
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Deserialize)]
 pub enum RequestedCwy {
     L,
     R,
@@ -79,41 +75,5 @@ impl PartialEq<Cwy> for RequestedCwy {
             RequestedCwy::RS => other == &Cwy::Right || other == &Cwy::Single,
             RequestedCwy::LRS => true,
         }
-    }
-}
-
-impl<'de> Deserialize<'de> for RequestedCwy {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct VariantVisitor;
-        impl<'de> Visitor<'de> for VariantVisitor {
-            type Value = RequestedCwy;
-            // Format a message stating what data this Visitor expects to receive.
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("expects to receive any of the following values l, r, s, lr, ls, rs, lrs (or any capitalisation thereof)")
-            }
-            fn visit_borrowed_str<E>(self, s: &'de str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                let mut chars: Vec<char> = s.to_uppercase().chars().collect::<Vec<char>>();
-                chars.sort();
-                Ok(match &chars.into_iter().collect::<String>()[..] {
-                    "L" => RequestedCwy::L,
-                    "R" => RequestedCwy::R,
-                    "S" => RequestedCwy::S,
-                    "LR" => RequestedCwy::LR,
-                    "LS" => RequestedCwy::LS,
-                    "RS" => RequestedCwy::RS,
-                    "LRS" => RequestedCwy::LRS,
-                    _ => return Err(Error::custom("Invalid carriageway filter")),
-                })
-            }
-        }
-        //const VARIANTS: &'static [&'static str] = &["L", "R", "S", "LR", "LS", "RS", "LRS"];
-        //deserializer.deserialize_enum("RequestedCwy", VARIANTS, VariantVisitor)
-        deserializer.deserialize_string(VariantVisitor)
     }
 }
