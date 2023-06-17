@@ -2,14 +2,12 @@ use std::sync::Arc;
 
 use warp::{Filter, Rejection};
 
-use crate::{
-    helpers::with_shared_data,
-    data::IndexedData,
-};
+use crate::data::IndexedData;
 
 use super::{
     geoprocessing::{get_linestring, get_linestring_m},
-    query_parameters::QueryParametersLine
+    query_parameters::QueryParametersLine,
+    with_shared_data
 };
 
 pub fn lines(

@@ -3,7 +3,7 @@ use lz_fear;
 use reqwest;
 use serde_json;
 
-use crate::{helpers::ErrorWithStaticMessage, routes::query_parameters::RequestedCwy};
+use crate::{helpers::ErrorWithStaticMessage, filters::query_parameters::RequestedCwy};
 
 use super::{
     esri_serde::{LayerDownloadChunk, LayerSaved, LayerSavedFeature},

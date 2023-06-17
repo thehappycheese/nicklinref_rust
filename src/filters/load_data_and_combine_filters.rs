@@ -41,7 +41,7 @@ pub async fn load_data_and_combine_filters(settings:&Settings) -> Result<BoxedFi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::routes::query_parameters::RequestedCwy;
+    use crate::filters::query_parameters::RequestedCwy;
     use byteorder::{WriteBytesExt, LittleEndian};
     use std::io::Read;
     use flate2::read::GzDecoder;

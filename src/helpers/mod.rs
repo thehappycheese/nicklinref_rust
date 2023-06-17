@@ -1,6 +1,3 @@
-mod with_shared_data;
-pub use with_shared_data::with_shared_data;
-
 mod error_with_static_message;
 pub use error_with_static_message::ErrorWithStaticMessage;
 

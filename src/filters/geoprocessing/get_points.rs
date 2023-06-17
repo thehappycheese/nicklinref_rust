@@ -1,5 +1,5 @@
 use crate::data::IndexedData;
-use crate::routes::query_parameters::{QueryParametersPoint, output_format::OutputFormatPoints};
+use crate::filters::query_parameters::{QueryParametersPoint, output_format::OutputFormatPoints};
 use nickslinetoolsrust::line_string_measured::LineStringMeasured;
 use nickslinetoolsrust::vector2::Vector2;
 use crate::helpers::{convert_metres_to_degrees, ErrorWithStaticMessage, mean_angle};

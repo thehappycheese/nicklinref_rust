@@ -67,7 +67,7 @@ mod tests {
         wrap_fn
     };
 
-    use crate::{helpers::ErrorWithStaticMessage, routes};
+    use crate::{helpers::ErrorWithStaticMessage, filters};
 
     macro_rules! create_wrapped_filter_success {
         () => {
@@ -123,7 +123,7 @@ mod tests {
                     Err(ErrorWithStaticMessage::new("Failure Message").into());
                 result
             })
-            .recover(routes::custom_rejection_handler)
+            .recover(filters::custom_rejection_handler)
             .with(wrap_fn(echo_x_request_id));
 
         let response = warp::test::request()
