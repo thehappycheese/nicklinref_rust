@@ -1,4 +1,4 @@
-use crate::data::esri_serde::Cwy;
+use crate::data::cached::Cwy;
 use serde::Deserialize;
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]
