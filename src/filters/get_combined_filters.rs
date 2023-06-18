@@ -99,6 +99,13 @@ mod tests {
         println!("test: Rejected request should still echo x-request-id");
         let result = warp::test::request().header("x-request-id", "11").path("/?road=H000").filter(&filter).await.unwrap();
         assert!(result.headers().get("x-request-id").map_or(false, |header| header=="11"));
+
+        println!("test: static http");
+        let result = warp::test::request().path("/show/index.html").filter(&filter).await.unwrap();
+        let body_bytes = warp::hyper::body::to_bytes(result.into_body()).await.unwrap();
+        let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
+        let first_line = body_str.lines().next().unwrap_or("");
+        assert_eq!(first_line.trim(), "<!doctype html>");
     }
 
     #[tokio::test]
