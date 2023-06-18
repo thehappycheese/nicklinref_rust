@@ -64,6 +64,19 @@ pub struct Settings {
 
 }
 
+impl Settings {
+    /// Parse the settings from the command line or from environment variables
+    /// Run the app with `--help` to get a description of the available
+    ///  parameters and environment variables
+    pub fn get_from_cli_or_env() -> Self{
+        Self::parse()
+    }
+
+    /// combine the NLR_ADDR and NLR_PORT values into a socket address
+    pub fn get_socket_address(&self) -> std::net::SocketAddr { 
+        (self.NLR_ADDR, self.NLR_PORT).into()
+    }
+}
 
 
 
