@@ -4,38 +4,6 @@ use warp::{Filter, wrap_fn, filters::BoxedFilter, reply::Response, fs::File, Rep
 
 use crate::{data::IndexedData, settings::Settings};
 
-pub async fn load_data_and_get_combined_filters(settings:&Settings) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
-
-    // Load data
-    let indexed_data:Arc<_> = IndexedData::load(
-        &settings.NLR_DATA_FILE,
-        &settings.NLR_DATA_SOURCE_URL,
-        &settings.NLR_FORCE_UPDATE_DATA
-    ).await?.into();
-
-    // define each "filter" (aka "route")  of the server
-    // each filter corresponds to a feature or capability
-    let filter_static_folder = warp::fs::dir(settings.NLR_STATIC_HTTP.clone());
-    let filter_show          = warp::path("show").and(filter_static_folder);
-    let filter_lines         = super::lines(indexed_data.clone());
-    let route_points         = super::points(indexed_data.clone());
-    let route_lines_batch    = super::lines_batch(indexed_data.clone());
-
-    // chain filters together into a single filter
-    let x = filter_show.map(|r:File| r.into_response()).or(
-        filter_lines
-        .or(route_points)
-        .or(
-            route_lines_batch
-            .with(warp::compression::gzip())
-        )
-        .recover(super::custom_rejection_handler)
-        .with(wrap_fn(super::echo_x_request_id))
-    ).unify();
-    Ok(x.boxed())
-}
-
-
 pub async fn get_combined_filters(settings:&Settings, indexed_data:Arc<IndexedData>) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
 
     // define each "filter" (aka "route")  of the server
@@ -59,11 +27,6 @@ pub async fn get_combined_filters(settings:&Settings, indexed_data:Arc<IndexedDa
     ).unify();
     Ok(x.boxed())
 }
-
-
-
-
-
 
 #[cfg(test)]
 mod tests {
