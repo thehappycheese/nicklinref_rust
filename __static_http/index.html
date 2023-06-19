@@ -1,10 +1,13 @@
+<!doctype html>
 <html>
 
 <head>
 	<title>Nicks GeoJSON Previewer</title>
-	<link rel="stylesheet"
-		href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css" type="text/css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
 	<style>
+        html{
+            height: 100%;
+        }
 		body{
 			height: 100%;
 			width: 100%;
@@ -25,7 +28,7 @@
 			display:block;
 		}
 	</style>
-	<script defer src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
 	<script defer src="Fetch_Queue.js"></script>
 	<script defer src="binary_encode_batch_request.js"></script>
 	<script defer src="test-header-x-response-id.js"></script>
@@ -34,7 +37,7 @@
 
 <body>
 	<div id="map" class="map"></div>
-	<div id="buttoncontainer">
+	<div id="buttoncontainer" style="display:none;">
 		<button onclick="reset_view()">Reset View</button><br>
 		<button
 			onclick="run_demo()" 

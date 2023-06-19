@@ -719,16 +719,19 @@ dependencies = [
 
 [[package]]
 name = "nicklinref"
-version = "0.10.2"
+version = "1.0.0"
 dependencies = [
+ "byteorder",
  "bytes",
  "clap",
  "figment",
+ "flate2",
  "lz-fear",
  "nickslinetoolsrust",
  "reqwest",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "tokio",
  "warp",
 ]

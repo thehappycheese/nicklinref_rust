@@ -1,18 +1,20 @@
 
 # NickLinRef <!-- omit in toc -->
 
-NickLinRef is designed to accurately extract portions of the
-[Western Australia Road Network](https://catalogue.data.wa.gov.au/dataset/mrwa-road-network)
-geometry using `road/slk_from/slk_to` or just `road/slk`. You can query this
-service to receive the road segment data in either `GeoJSON` or `WKT` formats.
+![dev tests passing](https://github.com/thehappycheese/nicklinref_rust/actions/workflows/rust.yml/badge.svg)
 
-It can be queried in Excel using the
-[`=WEBSERVICE()` formula](https://support.microsoft.com/en-us/office/webservice-function-0546a35a-ecc6-4739-aed7-c0b7ce1562c4).
-or in PowerBI using the
-[`Web.Contents()` function](https://learn.microsoft.com/en-us/powerquery-m/web-contents)
-and best of all in my custom PowerBI visual
+NickLinRef is designed to accurately extract points or linestrings from the
+[Western Australia Road Network](https://catalogue.data.wa.gov.au/dataset/mrwa-road-network)
+geometry using `road/slk_from/slk_to` or just `road/slk`. Get results in either
+`GeoJSON` or `WKT` formats.
+
+Get results in Excel using the
+[`=WEBSERVICE()` formula](https://support.microsoft.com/en-us/office/webservice-function-0546a35a-ecc6-4739-aed7-c0b7ce1562c4),
+in PowerBI using the
+[`Web.Contents()` function](https://learn.microsoft.com/en-us/powerquery-m/web-contents),
+or best of all, in my custom PowerBI visual
 [NickMapBI](https://github.com/thehappycheese/nickmap-bi) to dynamically
-create and visualise geometry based on live data:
+create and visualise geometry based on live data. Below is a screenshot of NickMapBI:
 
 ![NickMapBI](https://github.com/thehappycheese/nickmap-bi/blob/main/readme_extras/v4.2.0-screenshot.png)
 
@@ -20,39 +22,41 @@ create and visualise geometry based on live data:
 
 - [1. Getting Started](#1-getting-started)
 - [2. Distinguishing Features](#2-distinguishing-features)
-- [3. Usage - GET - Text Response (GeoJSON / WKT / JSON / LATLON)](#3-usage---get---text-response-geojson--wkt--json--latlon)
-  - [3.1. Example - Get Lines - WKT](#31-example---get-lines---wkt)
-  - [3.2. Example - Get Points - GeoJSON](#32-example---get-points---geojson)
-  - [3.3. Example - Get Point - Simple Latitude Longitude](#33-example---get-point---simple-latitude-longitude)
-- [4. Usage - Browser - `/show/` Page](#4-usage---browser---show-page)
-- [5. Usage - POST - `/batch/` Route for app Integration](#5-usage---post---batch-route-for-app-integration)
-- [6. Notes](#6-notes)
-  - [6.1. SLK, True Distance and Chainage](#61-slk-true-distance-and-chainage)
-  - [6.2. Supported Network Types](#62-supported-network-types)
-  - [6.3. Coordinate Reference System (CRS)](#63-coordinate-reference-system-crs)
-- [7. Running the Server Yourself](#7-running-the-server-yourself)
-  - [7.1. Installation](#71-installation)
-  - [7.2. Compilation](#72-compilation)
-    - [7.2.1. Compiling for Ubuntu / Debian](#721-compiling-for-ubuntu--debian)
-    - [7.2.2. Compiling for Windows](#722-compiling-for-windows)
-  - [7.3. Configuration](#73-configuration)
-    - [7.3.1. Configuration - Command Line Interface (CLI)](#731-configuration---command-line-interface-cli)
-    - [7.3.2. Configuration - Environment Variables](#732-configuration---environment-variables)
-  - [7.4. Data Download and Refresh](#74-data-download-and-refresh)
-- [8. Related Projects](#8-related-projects)
-  - [8.1. Megalinref](#81-megalinref)
-  - [8.2. NickMapBI](#82-nickmapbi)
-  - [8.3. Python version (Predecessor to this Rust version)](#83-python-version-predecessor-to-this-rust-version)
+- [3. Usage](#3-usage)
+  - [3.1. Get Lines - Query Parameters](#31-get-lines---query-parameters)
+  - [3.2. Get Points - Query Parameters](#32-get-points---query-parameters)
+  - [3.3. Extra Notes - Query Parameters](#33-extra-notes---query-parameters)
+    - [3.3.1. `cwy=` Parameter](#331-cwy-parameter)
+    - [3.3.2. `offset=` Parameter](#332-offset-parameter)
+    - [3.3.3. `f=` Parameter](#333-f-parameter)
+  - [3.4. Browser - `/show/` Page](#34-browser---show-page)
+  - [3.5. Advanced - `/batch/` Route](#35-advanced---batch-route)
+  - [3.6. Additional Usage Notes](#36-additional-usage-notes)
+    - [3.6.1. SLK, True Distance and Chainage](#361-slk-true-distance-and-chainage)
+    - [3.6.2. Supported Network Types](#362-supported-network-types)
+    - [3.6.3. Coordinate Reference System (CRS)](#363-coordinate-reference-system-crs)
+- [4. Running the Server Yourself](#4-running-the-server-yourself)
+  - [4.1. Installation](#41-installation)
+  - [4.2. Compilation](#42-compilation)
+    - [4.2.1. Compiling for Ubuntu / Debian](#421-compiling-for-ubuntu--debian)
+    - [4.2.2. Compiling for Windows](#422-compiling-for-windows)
+  - [4.3. Configuration](#43-configuration)
+    - [4.3.1. Configuration - Command Line Interface (CLI)](#431-configuration---command-line-interface-cli)
+    - [4.3.2. Configuration - Environment Variables](#432-configuration---environment-variables)
+  - [4.4. Data Download and Refresh](#44-data-download-and-refresh)
+- [5. Related Projects](#5-related-projects)
+  - [5.1. Megalinref](#51-megalinref)
+  - [5.2. NickMapBI](#52-nickmapbi)
+  - [5.3. Python version (Predecessor to this Rust version)](#53-python-version-predecessor-to-this-rust-version)
 
 ## 1. Getting Started
 
-To get started, download and extract a pre-compiled version of this application
-from the [releases](/releases) page. Run `nicklinref.exe` and navigate to
-<http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> test the server is
-working.
+First see [4. Running the Server Yourself](#4-running-the-server-yourself) or
+[4.2. Compilation](#42-compilation) to get your copy of the server up and
+running.
 
-Next See the [Usage](#3-usage---get---text-response-geojson--wkt--json--latlon)
-section below.
+Next See the [3. Usage](#3-usage) section for some examples and detailed
+documentation.
 
 ## 2. Distinguishing Features
 
@@ -66,87 +70,52 @@ such as those available from <https://data.wa.gov.au>.
   from a large excel sheet using `=WEBSERVICE()`)
 - Low server resource consumption (CPU, RAM, storage etc).
 - Support for GeoJSON or WKT output formats.
-- Support for "Offset" operation which can assist in visualizing data for
+- Support for `offset` operation which can assist in visualizing data for
   different lanes.
 - Bandwidth-efficient `/batch/` mode to integrate with applications<br>
   (Such as custom PowerBI visuals)
 
-## 3. Usage - GET - Text Response (GeoJSON / WKT / JSON / LATLON)
+## 3. Usage
 
 When the web service is running locally (on your own machine) it can be accessed
 at the following address by default:
 
-<http://localhost:8080/?>...
+`http://localhost:8080/...`
 
-The  parameters are summarised in the table below:
+Query parameters must be added to the end of the url to get the desired results;
+a query begins with `?` followed by a number of `{name}={value}` pairs separated
+by `&`.
 
-| Name       | Description                                                                                                                                                                                           | Example Value               | Lines                              | Points | Default   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------------- | ------ | --------- |
-| `road`     | Main Roads Road Number or Local Government Road Number (case sensitive)                                                                                                                               | `road=H001`                 | ✔️                                  | ✔️      | -         |
-| `slk_from` | Straight Line Kilometre to start the segment                                                                                                                                                          | `slk_from=1.55`             | ✔️                                  | ❌      | -         |
-| `slk_to`   | Straight Line Kilometre to end the segment                                                                                                                                                            | `slk_to=2.3`                | ✔️                                  | ❌      | -         |
-| `slk`      | Straight Line Kilometre to a point. (should not be combined with `slk_from` and `slk_to`, see notes below)                                                                                            | `slk=3`                     | ❌                                  | ✔️      | -         |
-| `cwy`      | Filter for the carriageway. Must be some combination of the letters `L`, `R` and `S` (not case sensitive).                                                                                            | `cway=LS` or `cway=RS`      | ❔                                  | ❔      | `LRS`     |
-| `offset`   | Number of metres to offset the resulting line segments. Large values may not produce any output. Negative values are to the left of the road (in slk direction) and positive values are to the right. | `offset=4` or `offset=-3.5` | ❔                                  | ❔      | `0`       |
-| `f`        | Desired response format. Must be `geojson`, `wkt`, `json`, `latlon` or `latlondir`. (see notes below)                                                                                                 | `f=geojson`                 | ❔<br> ~~`latlon`~~ ~~`latlondir`~~ | ❔      | `geojson` |
-| `m`        | EXPERIMENTAL<br>Option to include `M` linear slk coordinates in `geojson`, `wkt` or `json` modes.                                                                                                     | `m=true`                    | ❔                                  | ❌      | `false`   |
+For example, the following request returns two points at `road=H001` and
+`slk=2`. Note that the response contains two points because there are two
+carriageways at this location. The response is in the default 'geojson' format:
 
-> **Note:**
->
-> 1. Parameters are case insensitive; `CWY=LS` should work the same as `cwy=ls`.
-> 1. For `f=wkt` and `f=geojson` the result is always a `MultiPoint` or
->    `MultiLineString` even if the result consists of only one `Point` or
->    `LineString`.
-> 1. There is a known issue where empty `MultiPoint` and empty `MultiLineString`
->    objects can sometimes be returned when there is no resulting geometry.
->    In a future version this will be addressed by making the server return an
->    error instead.
-> 1. When `f=GeoJSON` responses are always wrapped in a `Feature`.
-> 1. The `f=json` format is a nested array like the `"coordinates":...`
->    attribute  in the same format as the geojson `MultiLineString` or
->    `MultiPoint`  array format.
-> 1. The `f=latlon` and `f=latlondir` formats are special:
->    - These formats are only valid when using the `slk=` mode.
->    - It will always return a single comma separated latitude longitude pair;
->    - If multiple points would have been returned (left and right carriageway)
->      then the average of these positions is returned
->    - `latlondir` is the same but followed by another comma and then the direction,
->       in degrees. When the direction is averaged (between left and right carriageway)
->       weird things might happen if the carriageways are going in very different directions.
->       Direction is measured anti-clockwise-positive from east.
-
-### 3.1. Example - Get Lines - WKT
-
-The following example fetches the Left and Single carriageway portions of Albany
-Highway from slk 1km to slk 2km and offsets them 10 metres to the left of the
-road. The result is returned in WKT format as a single `MULTILINESTRING`
-feature:
-
-<http://localhost:8080/?road=H001&slk_from=1&slk_to=2&cwy=LS&offset=-10&f=wkt>
-
-```wkt
-MULTILINESTRING ((115.88771097361135 -31.967604589743765,115.88776331305647 -31.96753166223028,115.88782456479156 -31.967494045166685,115.88808285746482 -31.967581573012584,115.88842643824691 -31.967706811122067,115.88865106830647 -31.967794863020398,115.88878639134748 -31.967856418305686,115.88961385220324 -31.968270404421514),(115.88961222617614 -31.96826961114868,115.89009682355594 -31.968500014510138),(115.89009709103813 -31.968500142226866,115.8908060320806 -31.96884008302064,115.89130780129135 -31.96906658240955),(115.89129847166095 -31.9690630113479,115.8924861744535 -31.96944832848648),(115.89248599022535 -31.969448268938134,115.89367451654047 -31.969831024006037),(115.89367516412221 -31.96983123526756,115.89489443528633 -31.970234120891217),(115.89489484503049 -31.970234348879462,115.8952199535067 -31.97034351139344,115.89552559070945 -31.970457312501807,115.89572276324779 -31.97054445312055,115.89588899502093 -31.97062796284781,115.89603052161054 -31.9707213605839),(115.89603611706656 -31.97072540301373,115.8961699852627 -31.970830173406412,115.89636973106218 -31.970999046961516,115.89654509709025 -31.971164236270756,115.89708949236724 -31.971705035229636),(115.88735210575929 -31.967327078117492,115.88761740846113 -31.967472091243042),(115.88761495220085 -31.96747075121283,115.88782449298621 -31.967576711138406))
-```
-
-### 3.2. Example - Get Points - GeoJSON
-
-The following example fetches the a point for both the Left and right
-carriageway portions of Albany Highway at `slk=2`. The format returned in the
-default GeoJSON as a `MultiPoint` feature, because there is both a left and
-right carriageway at this location:
-
-<http://localhost:8080/?road=H001&slk=2>
+<http://localhost:8080/?road=H001&slk=2&cwy=LS>
 
 ```json
-{"type":"Feature", "geometry":{"type":"MultiPoint", "coordinates":[[115.89702617983814,-31.97176876372234],[115.89692159880637,-31.97178473847775]]}}
+{"type":"Feature","geometry":{"type":"MultiPoint", "coordinates":[
+    [115.89702617983814,-31.97176876372234],
+    [115.89692159880637,-31.97178473847775]
+]}}
 ```
 
-### 3.3. Example - Get Point - Simple Latitude Longitude
+In the next example, a multi-linestring is returned rather than points. The
+search has been limited to the `L`eft and `S`ingle carriageways, and an `offset` of
+`-10` metres from the centreline has been applied, and the format is `wkt`:
 
-The following example includes the format specifier `f=latlon`. It returns a
-single point on Albany Highway at slk 2 km. If there were multiple locations
-with `slk=2` (due to multiple carriageways, or due to slk gaps and overlaps)
-then the average position of all such points is returned:
+<http://localhost:8080/?road=H001&slk_from=1&slk_to=1.1&cwy=LS&offset=-10&f=wkt>
+
+```wkt
+MULTILINESTRING ((115.88771097361135 -31.967604589743765,
+115.88776331305647 -31.96753166223028,115.88782456479156 -31.967494045166685,
+115.88808285746482 -31.967581573012584,115.88834117332095 -31.967675703676065),
+(115.88735210575929 -31.967327078117492,115.88761740846113 -31.967472091243042),
+(115.88761495220085 -31.96747075121283,115.88782449298621 -31.967576711138406))
+```
+
+In this final example, the `latlon` format is used to obtain a simple Latitude /
+Longitude value. Note that `f=latlon` averages all matching point results to
+ensure only a single coordinate is retuned:
 
 <http://localhost:8080/?road=H001&slk=2&f=latlon>
 
@@ -154,7 +123,69 @@ then the average position of all such points is returned:
 -31.971776751100045,115.89697388932225
 ```
 
-## 4. Usage - Browser - `/show/` Page
+The full set of allowed parameters are summarised in the following tables:
+
+### 3.1. Get Lines - Query Parameters
+
+| Name       | Description                                                                                                          | Allowed Values                                                                       | Example         | Case Sensitive | Required | Default   |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------- | -------------- | -------- | --------- |
+| `road`     | Road Number                                                                                                          | Valid Road / PSP Number (See [supported network types](#362-supported-network-types)) | `road=H001`     | ✔️              | ✔️        | -         |
+| `slk_from` | [SLK](#361-slk-true-distance-and-chainage) to start the segment. If omitted, or -Infinity, return from start of road. | Any Number or `Infinity`                                                             | `slk_from=1.55` | ✔️              |          | -Infinity |
+| `slk_to`   | [SLK](#361-slk-true-distance-and-chainage) to end the segment. If omitted, or +Infinity, return up to end of road.    | Any Number or `Infinity`<br>(>&nbsp;`slk_from`)                                      | `slk_to=2.3`    | ✔️              |          | +Infinity |
+| `cwy`      | Filter for the carriageway.<br>See [`cwy` Parameter](#331-cwy-parameter)                                             | `L` `R` `S` `LS` `RS` `LR` `LRS`                                                     | `cwy=RS`        | ✔️              |          | `LRS`     |
+| `offset`   | Metres to offset the resulting line from the road centre line.<br>See [`offset` Parameter](#332-offset-parameter)    | Positive or Negative Number<br><i>Note: Large values can cause blank output</i>      | `offset=-3.5`   | ✔️              |          | `0`       |
+| `f`        | Desired response format (See [4.3.3. `f=` Parameter](#333-f-parameter))                                              | `geojson` `wkt` `json`                                                               | `f=geojson`     | ✔️              |          | `geojson` |
+| `m`        | EXPERIMENTAL<br>Option to include `M` linear slk coordinates.                                                        | `true` `false`                                                                       | `m=true`        | ✔️              |          | `false`   |
+
+### 3.2. Get Points - Query Parameters
+
+| Name     | Description                                                                                                        | Allowed Values                                                                       | Example     | Case Sensitive | Required | Default   |
+| -------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ----------- | -------------- | -------- | --------- |
+| `road`   | Road Number                                                                                                        | Valid Road / PSP Number (See [supported network types](#362-supported-network-types)) | `road=H001` | ✔️              | ✔️        | -         |
+| `slk`    | [SLK](#361-slk-true-distance-and-chainage) of the point                                                             | Positive Number                                                                      | `slk=3`     | ✔️              | ✔️        | -         |
+| `cwy`    | Filter for the carriageway. <br>See [`cwy` Parameter](#331-cwy-parameter)                                          | `L` `R` `S` `LS` `RS` `LR` `LRS`                                                     | `cwy=RS`    | ✔️              |          | `LRS`     |
+| `offset` | Metres to offset the resulting point from the road centre line.<br>See [`offset` Parameter](#332-offset-parameter) | Positive or Negative Number<br><i>Note: Large values can cause blank output</i>      | `offset=4`  | ✔️              |          | `0`       |
+| `f`      | Desired response format. (See [4.3.3. `f=` Parameter](#333-f-parameter))                                           | `geojson` `wkt` `json` `latlon` `latlondir`                                          | `f=geojson` | ✔️              |          | `geojson` |
+
+### 3.3. Extra Notes - Query Parameters
+
+#### 3.3.1. `cwy=` Parameter
+
+The following diagram illustrates the effect of the carriageway filter parameter
+`cwy=` with some random examples.
+
+![carriageway filter](/readme_extras/cwy-illustration.svg)
+
+Note that any combination of `L`, `R` and `S` can be
+used. The filter is applied before any points or lines are sampled from the
+centreline.
+
+#### 3.3.2. `offset=` Parameter
+
+The following diagram illustrates the effect of the offset parameter `offset=`.
+
+![offset direction](/readme_extras/offset-direction-diagram.svg)
+
+The offset is applied before any points or lines are sampled from the road
+centreline.
+
+Note a rough approximation is used to generate offset points and linestrings.
+Large offset values may cause blank response values. Try to keep it less then +-
+40 metres.
+
+#### 3.3.3. `f=` Parameter
+
+| Format        | Specification                        | Notes                                                                                                                                                                                                                                                                                                 |
+| ------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `f=geojson`   | <https://geojson.org/>               | Responses are always wrapped in a `Feature` and will always   be either `"type":"MultiLineString"` or `"type":"MultiPoint"`                                                                                                                                                                           |
+| `f=json`      | Derived from geojson                 | Nested array like the `"coordinates":...` attribute in the the geojson `MultiLineString` or `MultiPoint` specifications. It is intended to reduce unnecessary json overhead.                                                                                                                          |
+| `f=wkt`       | <https://www.ogc.org/standard/sfa/>  |                                                                                                                                                                                                                                                                                                       |
+| `f=latlon`    | `{latitude},{longitude}`             | Responses are always a single comma separated pair. If multiple points would have been returned (eg for left and right carriageway) then the average of these is returned.                                                                                                                            |
+| `f=latlondir` | `{latitude},{longitude},{direction}` | Responses are always a single comma separated triplet. If multiple points would have been returned (eg for left and right carriageway) then the average of these is returned. The `direction` is in degrees measured anti-clockwise-positive from east. It is the is the direction of increasing SLK. |
+
+> See also [Coordinate Reference System (CRS)](#363-coordinate-reference-system-crs)
+
+### 3.4. Browser - `/show/` Page
 
 Show mode works the same as described above, except that instead of returning
 raw data, it displays an interactive map when viewed in a web browser. This is
@@ -167,7 +198,7 @@ the url before the query parameters:
 Query mode can easily be used from Excel with the `=WEBSERVICE()` formula, or
 from Power BI using the `=Web.Contents()` function.
 
-## 5. Usage - POST - `/batch/` Route for app Integration
+### 3.5. Advanced - `/batch/` Route
 
 `/batch/` mode is a bandwidth efficient alternative query method meant for
 integration with apps and PowerBI custom visuals.
@@ -177,9 +208,12 @@ not use url query parameters. See details below.
 
 <details>
 
-<summary style="color:red; font-weight:bold; font-size:1.1em;margin:2em 0">
+<summary>
 Click to expand details of `/batch/` Mode
 </summary>
+
+Batch mode allows only linestring requests. The request is in a packed binary
+format, the response will be gzipped a geojson `FeatureCollection` object.
 
 The body of the request must be binary data consisting of a series of frames
 with the format shown below. Any number of frames can be packed into a single
@@ -309,15 +343,15 @@ The output of the script above is shown below:
 
 </details>
 
-## 6. Notes
+### 3.6. Additional Usage Notes
 
-### 6.1. SLK, True Distance and Chainage
+#### 3.6.1. SLK, True Distance and Chainage
 
 SLK stands for "Straight Line Kilometre" and is sometimes called 'chainage' or
 'kilometrage' in other contexts.
 
 At Main Roads Western Australia SLK refers to an "adjusted" linear measure which
-has discontinuities called 'Points of Equation' (there are between 100 and 200
+has discontinuities called 'Points of Equation' (POE) (there are between 100 and 200
 points of equation throughout the state road network) where there is an abrupt
 increase or decrease in SLK. This is done so that when asset locations are
 recorded by SLK, these records are not invalidated when a road realignment
@@ -331,7 +365,7 @@ The non-adjusted linear measure is called "True Distance".
 This software is only capable of looking up Lat/Lon from SLK. True distance is
 not yet supported.
 
-### 6.2. Supported Network Types
+#### 3.6.2. Supported Network Types
 
 This tool is capable of querying all road network types included in this dataset
 <https://portal-mainroads.opendata.arcgis.com/datasets/mainroads::road-network/about>
@@ -345,7 +379,7 @@ This tool is capable of querying all road network types included in this dataset
 | Miscellaneous Road         | ✔️       |
 | Crossover                  | ✔️       |
 
-### 6.3. Coordinate Reference System (CRS)
+#### 3.6.3. Coordinate Reference System (CRS)
 
 The coordinate system of the returned geometry depends on the coordinate system
 downloaded from `NLR_DATA_SOURCE_URL`.
@@ -355,26 +389,23 @@ also called WGS84. See <https://spatialreference.org/ref/epsg/wgs-84/>) This is
 because the `&offset=...` uses an approximation to convert from meters to
 degrees assuming that there are about `111320` metres per degree.
 
-## 7. Running the Server Yourself
+## 4. Running the Server Yourself
 
-### 7.1. Installation
+### 4.1. Installation
 
-Windows and most Linux systems are supported, however only windows binaries are
-distributed from the [releases](/releases) page.
-
-To use a pre-compiled version of this application please visit the
-[releases](/releases) page and download and extract one of the zip files.
+On windows you can use a pre-compiled version of this application; download the
+latest version from [releases](/releases) and extract the zip file.
 
 Run `nicklinref.exe` then visit
 <http://localhost:8080/?road=H001&slk_from=1.5&slk_to=3> to test if it is
 working.
 
-If possible, the best way to use this software is to clone this repository and
-build it yourself. The main branch is kept at the latest release version.
+On Linux the best way to use this software is to clone this repository and
+build it yourself. See instructions below.
 
-### 7.2. Compilation
+### 4.2. Compilation
 
-#### 7.2.1. Compiling for Ubuntu / Debian
+#### 4.2.1. Compiling for Ubuntu / Debian
 
 Install required packages:
 
@@ -413,7 +444,7 @@ Build and run:
 cargo run --release
 ```
 
-#### 7.2.2. Compiling for Windows
+#### 4.2.2. Compiling for Windows
 
 Install rust: <https://www.rust-lang.org/tools/install>. You may be prompted to
 install some microsoft visual C++ thing which is used for linking native
@@ -432,13 +463,13 @@ Build and run:
 cargo run --release
 ```
 
-### 7.3. Configuration
+### 4.3. Configuration
 
 LinRef can be configured using either environment variable or command line
 arguments. (Previous versions supported a `config.json` option, but support for
 this is dropped because it was never used)
 
-#### 7.3.1. Configuration - Command Line Interface (CLI)
+#### 4.3.1. Configuration - Command Line Interface (CLI)
 
 nicklinref supports a help command flag which will print out the most current
 command line documentation.
@@ -451,7 +482,7 @@ nicklinref.exe --help
 Usage: nicklinref [OPTIONS]
 
 Options:
-      --addr <NLR_ADDR>
+      --ip-address <NLR_ADDR>
           The IP address to listen on [env: NLR_ADDR=] [default: 127.0.0.1]
       --port <NLR_PORT>
           The port to listen on [env: NLR_PORT=] [default: 8080]
@@ -467,27 +498,11 @@ Options:
           Print help
 ```
 
-#### 7.3.2. Configuration - Environment Variables
+#### 4.3.2. Configuration - Environment Variables
 
 As an alternative to command line options, environment variables can be used  instead.
 
-Configuration options set using environment variables are overridden by any
-command line options.
-
-1. Check to see if a config file has been specified on the command line using
-   the `--config` option:
-
-```shell
-nicklinref.exe
-```
-
-1. Finally, environment variables with matching names will be used to overwrite
-   any options loaded so far.
-   - If there is an error while processing an environment variable, the
-     previously loaded option will be used instead. (Note: This may be changed
-     to a fatal error in the future.)
-
-The following table describes the configuration options in more detail:
+> Environment variables are overridden by any command line options.
 
 | Property              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -497,29 +512,28 @@ The following table describes the configuration options in more detail:
 | `NLR_DATA_SOURCE_URL` | This is the ArcGIS REST service where the road network is downloaded from. It is assumed that multiple requests are needed and the `&resultOffset=...` parameter is used to repeatedly fetch more data. Only certain fields are fetched `outFields=ROAD,START_SLK,END_SLK,CWY` and the output spatial reference is specified `&outSR=4326`. ESRI's own json format (`&f=json`) is expected because `&f=geojson` does not seem to work properly. Also note that currently the field names `ROAD`, `START_SLK`, `END_SLK`, `CWY` are hard-coded and must exist on the incoming data. |
 | `NLR_STATIC_HTTP`     | Used by the `/show/` feature to display an interactive map. The directory specified by this config option should exist or I think the application may crash on startup. The directory can probably be empty though if it is not required. The `__static_http` folder in this repo contains the files required.                                                                                                                                                                                                                                                                     |
 
-### 7.4. Data Download and Refresh
+### 4.4. Data Download and Refresh
 
 To refresh your data, simply manually delete the file specified by the
 `NLR_DATA_FILE` option and restart the application. Alternatively add the
 `--force-update-data` flag to the command line when launching the server. Fresh
 data will be downloaded.
 
+## 5. Related Projects
 
-## 8. Related Projects
-
-### 8.1. Megalinref
+### 5.1. Megalinref
 
 [Megalinref](https://github.com/thehappycheese/megalinref) is an attempt to
 bring the functionality of this server directly to python. It is a rust-powered
 python library that will do all the same things as this server, but without the
 overhead of running a rest service on localhost.
 
-### 8.2. NickMapBI
+### 5.2. NickMapBI
 
 [NickMapBI](https://github.com/thehappycheese/nickmap-bi/) is a custom PowerBI
 visual which calls into a running instance of NickLinRef.
 
-### 8.3. Python version (Predecessor to this Rust version)
+### 5.3. Python version (Predecessor to this Rust version)
 
 This repo is a rust implementation of my previous project written in python:
 <https://github.com/thehappycheese/linear_referencing_geocoding_server>

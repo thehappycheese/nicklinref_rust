@@ -1,5 +1,4 @@
-mod output_format;
-pub use output_format::OutputFormat;
+pub mod output_format;
 
 mod requested_cwy;
 pub use requested_cwy::RequestedCwy;

@@ -5,13 +5,14 @@ use std::sync::Arc;
 use warp::Filter;
 
 use crate::{
-    helpers::{with_shared_data, ErrorWithStaticMessage},
-    data::{IndexedData},
+    helpers::ErrorWithStaticMessage,
+    data::IndexedData,
 };
 
 use super::{
-    geoprocessing::{get_linestring},
-    query_parameters::QueryParameterBatch
+    geoprocessing::get_linestring,
+    query_parameters::QueryParameterBatch,
+    with_shared_data
 };
 
 pub fn lines_batch(
