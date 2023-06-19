@@ -17,5 +17,8 @@ pub use lines_batch::lines_batch;
 mod custom_rejection_handler;
 pub use custom_rejection_handler::custom_rejection_handler;
 
-mod load_data_and_combine_filters;
-pub use load_data_and_combine_filters::load_data_and_combine_filters;
+mod get_combined_filters;
+pub use get_combined_filters::get_combined_filters;
+
+mod with_shared_data;
+pub use with_shared_data::with_shared_data;

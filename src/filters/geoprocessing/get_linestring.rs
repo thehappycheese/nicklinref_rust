@@ -1,6 +1,6 @@
 
 use crate::data::IndexedData;
-use crate::routes::query_parameters::{QueryParametersLine,OutputFormat};
+use crate::filters::query_parameters::{QueryParametersLine, output_format::OutputFormatLines};
 use nickslinetoolsrust::line_string_measured::{LineStringMeasured};
 use crate::helpers::{convert_metres_to_degrees, ErrorWithStaticMessage};
 
@@ -38,7 +38,7 @@ pub fn get_linestring(query:&QueryParametersLine, indexed_data:&IndexedData)->Re
         });
 
     match query.f{
-        OutputFormat::JSON => {
+        OutputFormatLines::json => {
             let line_string_string = features
                 .map(|linestring|{
                         "[".to_string() + &linestring.iter().filter_map(|vertex| serde_json::to_string(vertex).ok()).collect::<Vec<String>>().join(",") + "]"
@@ -47,7 +47,7 @@ pub fn get_linestring(query:&QueryParametersLine, indexed_data:&IndexedData)->Re
                 .join(",");
             Ok("[".to_string() + &line_string_string + "]")
         },
-        OutputFormat::GEOJSON => {
+        OutputFormatLines::geojson => {
             let line_string_string = features
                 .map(|linestring|{
                         "[".to_string() + &linestring.iter().filter_map(|vertex| serde_json::to_string(vertex).ok()).collect::<Vec<String>>().join(",") + "]"
@@ -56,7 +56,7 @@ pub fn get_linestring(query:&QueryParametersLine, indexed_data:&IndexedData)->Re
                 .join(",");
             Ok( r#"{"type":"Feature", "geometry":{"type":"MultiLineString", "coordinates":["#.to_string() + &line_string_string + "]}}")
         },
-        OutputFormat::WKT => {
+        OutputFormatLines::wkt => {
             let line_string_string = features
                 .map(|linestring|{
                         "(".to_string() + &linestring.iter().map(|vertex| format!("{} {}", vertex.0, vertex.1)).collect::<Vec<String>>().join(",") + ")"
@@ -64,12 +64,6 @@ pub fn get_linestring(query:&QueryParametersLine, indexed_data:&IndexedData)->Re
                 .collect::<Vec<String>>()
                 .join(",");
             Ok("MULTILINESTRING (".to_string() + &line_string_string + ")")
-        },
-        OutputFormat::LATLON=> Err(ErrorWithStaticMessage::new(
-            "Invalid query type: f=LATLON can only be used with the point query type. Please use f=JSON, or specify slk instead of slk_from and slk_to."
-        )),
-        OutputFormat::LATLONDIR=>Err(ErrorWithStaticMessage::new(
-            "Invalid query type: f=LATLONDIR can only be used with the point query type. Please use f=JSON, or specify slk instead of slk_from and slk_to."
-        ))
+        }
     }
 }

@@ -4,14 +4,7 @@ use warp::{Filter, wrap_fn, filters::BoxedFilter, reply::Response, fs::File, Rep
 
 use crate::{data::IndexedData, settings::Settings};
 
-pub async fn load_data_and_combine_filters(settings:&Settings) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
-
-    // Load data
-    let indexed_data:Arc<_> = IndexedData::load(
-        &settings.NLR_DATA_FILE,
-        &settings.NLR_DATA_SOURCE_URL,
-        &settings.NLR_FORCE_UPDATE_DATA
-    ).await?.into();
+pub async fn get_combined_filters(settings:&Settings, indexed_data:Arc<IndexedData>) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
 
     // define each "filter" (aka "route")  of the server
     // each filter corresponds to a feature or capability
@@ -35,13 +28,10 @@ pub async fn load_data_and_combine_filters(settings:&Settings) -> Result<BoxedFi
     Ok(x.boxed())
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::routes::query_parameters::RequestedCwy;
+    use crate::filters::query_parameters::RequestedCwy;
     use byteorder::{WriteBytesExt, LittleEndian};
     use std::io::Read;
     use flate2::read::GzDecoder;
@@ -52,17 +42,26 @@ mod tests {
     /// we cannot avoid running this initialisation once for every
     /// individual test.
     macro_rules! setup_filter_for_testing {
-        () => {
+        () => {{
             // modified settings for testing
             //  - prevent saving the data file by providing an empty filepath
             //  - set data source url to download a small subset of data
             //    (The first 5-ish kilometres of H015)
-            load_data_and_combine_filters(&Settings {
+
+            let settings = Settings {
                 NLR_DATA_FILE: "".to_owned(), 
                 NLR_DATA_SOURCE_URL: "https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=ROAD%3D%27H015%27%20and%20END_SLK%3C5&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json".to_owned(),
                 ..Settings::default()
-            }).await.unwrap()
-        };
+            };
+
+            let indexed_data:Arc<_> = IndexedData::load(
+                &settings.NLR_DATA_FILE,
+                &settings.NLR_DATA_SOURCE_URL,
+                &settings.NLR_FORCE_UPDATE_DATA
+            ).await.unwrap().into();
+
+            get_combined_filters(&settings, indexed_data).await.unwrap()
+        }};
     }
 
 
@@ -100,6 +99,13 @@ mod tests {
         println!("test: Rejected request should still echo x-request-id");
         let result = warp::test::request().header("x-request-id", "11").path("/?road=H000").filter(&filter).await.unwrap();
         assert!(result.headers().get("x-request-id").map_or(false, |header| header=="11"));
+
+        println!("test: static http");
+        let result = warp::test::request().path("/show/index.html").filter(&filter).await.unwrap();
+        let body_bytes = warp::hyper::body::to_bytes(result.into_body()).await.unwrap();
+        let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
+        let first_line = body_str.lines().next().unwrap_or("");
+        assert_eq!(first_line.trim(), "<!doctype html>");
     }
 
     #[tokio::test]

@@ -1,4 +1,4 @@
-use super::{OutputFormat, QueryParametersLine, RequestedCwy};
+use super::{QueryParametersLine, RequestedCwy, output_format::OutputFormatLines};
 
 use std::convert::TryFrom;
 use std::fmt;
@@ -69,7 +69,7 @@ impl TryFrom<bytes::Bytes> for QueryParameterBatch {
                 cwy,
                 offset,
                 m: false,
-                f: OutputFormat::JSON,
+                f: OutputFormatLines::json,
             })
         }
         Ok(QueryParameterBatch(params))
@@ -112,7 +112,7 @@ mod tests {
             cwy: RequestedCwy::LRS,
             offset: 0.0,
             m: false,
-            f: OutputFormat::JSON,
+            f: OutputFormatLines::json,
         };
 
         let binary = create_sample_binary(sample.clone());

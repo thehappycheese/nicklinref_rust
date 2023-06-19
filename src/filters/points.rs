@@ -2,14 +2,12 @@ use std::sync::Arc;
 
 use warp::Filter;
 
-use crate::{
-    helpers::with_shared_data,
-    data::IndexedData,
-};
+use crate::data::IndexedData;
 
 use super::{
     geoprocessing::get_points,
-    query_parameters::QueryParametersPoint
+    query_parameters::QueryParametersPoint,
+    with_shared_data
 };
 
 pub fn points(
