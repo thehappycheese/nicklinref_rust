@@ -17,6 +17,20 @@ pub fn lines(
     .and(with_shared_data(indexed_data.clone()))
     .and(warp::query())
     .and_then(|
+        indexed_data: Arc<IndexedData>,
+        query: QueryParametersLine
+    | async move {
+        if query.m {
+            get_linestring_m(&query, &indexed_data).map_err(|err|err.as_rejection())
+        } else {
+            get_linestring(&query, &indexed_data).map_err(|err|err.as_rejection())
+        }
+    })
+    .or(
+        warp::post()
+        .and(with_shared_data(indexed_data.clone()))
+        .and(warp::body::json())
+        .and_then(|
             indexed_data: Arc<IndexedData>,
             query: QueryParametersLine
         | async move {
@@ -26,4 +40,5 @@ pub fn lines(
                 get_linestring(&query, &indexed_data).map_err(|err|err.as_rejection())
             }
         })
+    ).unify()
 }

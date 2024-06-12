@@ -13,19 +13,25 @@ pub async fn get_combined_filters(settings:&Settings, indexed_data:Arc<IndexedDa
     let filter_lines         = super::lines(indexed_data.clone());
     let route_points         = super::points(indexed_data.clone());
     let route_lines_batch    = super::lines_batch(indexed_data.clone());
+    let route_unified_batch  = super::unified_batch(indexed_data.clone());
 
-    // chain filters together into a single filter
-    let x = filter_show.map(|r:File| r.into_response()).or(
-        filter_lines
-        .or(route_points)
+    // Chain filters together into a single filter
+    Ok(
+        filter_show
+        .map(|r:File| r.into_response())
         .or(
-            route_lines_batch
-            .with(warp::compression::gzip())
-        )
-        .recover(super::custom_rejection_handler)
-        .with(wrap_fn(super::echo_x_request_id))
-    ).unify();
-    Ok(x.boxed())
+            filter_lines
+            .or(route_points)
+            //.or(route_unified_batch)
+            .or(
+                route_lines_batch
+                .with(warp::compression::gzip())
+            )
+            .recover(super::custom_rejection_handler)
+            .with(wrap_fn(super::echo_x_request_id))
+        ).unify()
+        .boxed()
+    )
 }
 
 #[cfg(test)]

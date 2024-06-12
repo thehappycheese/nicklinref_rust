@@ -22,4 +22,15 @@ pub fn points(
         | async move {
             get_points(&query, &indexed_data).map_err(|err|err.as_rejection())
         })
+    .or(
+        warp::post()
+        .and(with_shared_data(indexed_data.clone()))
+        .and(warp::body::json())
+        .and_then(|
+            indexed_data: Arc<IndexedData>,
+            query: QueryParametersPoint
+        | async move {
+            get_points(&query, &indexed_data).map_err(|err|err.as_rejection())
+        })
+    ).unify()
 }

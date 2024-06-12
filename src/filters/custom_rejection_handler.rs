@@ -1,6 +1,6 @@
 use crate::helpers::ErrorWithStaticMessage;
 use warp::{
-    http::{StatusCode},
+    http::StatusCode,
     reply::Response,
     Rejection, Reply, reject::{InvalidQuery, MethodNotAllowed},
 };
