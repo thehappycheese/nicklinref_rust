@@ -11,3 +11,6 @@ pub use query_parameters_point::QueryParametersPoint;
 
 mod query_parameters_batch;
 pub use query_parameters_batch::QueryParameterBatch;
+
+mod query_parameters_unified;
+pub use query_parameters_unified::QueryParametersUnified;
