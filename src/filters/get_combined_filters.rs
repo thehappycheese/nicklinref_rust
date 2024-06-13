@@ -4,31 +4,29 @@ use warp::{Filter, wrap_fn, filters::BoxedFilter, reply::Response, fs::File, Rep
 
 use crate::{data::IndexedData, settings::Settings};
 
+/// get the combined routes / filters to handle each feature of the server
 pub async fn get_combined_filters(settings:&Settings, indexed_data:Arc<IndexedData>) -> Result<BoxedFilter<(Response,)>, Box<dyn Error>> {
 
-    // define each "filter" (aka "route")  of the server
-    // each filter corresponds to a feature or capability
     let filter_show = 
         warp::path("show")
         .and(
             warp::fs::dir(settings.NLR_STATIC_HTTP.clone())
             .map(|r:File| r.into_response())
         );
-    let filter_lines         = super::lines(indexed_data.clone());
-    let route_points         = super::points(indexed_data.clone());
-    let route_lines_batch    = super::lines_batch(indexed_data.clone());
-    let route_unified_batch  = super::unified_batch(indexed_data.clone());
+    let filter_lines          = super::lines(indexed_data.clone());
+    let filter_points         = super::points(indexed_data.clone());
+    let filter_lines_batch    = super::lines_batch(indexed_data.clone());
+    let filter_unified_batch  = super::unified_batch(indexed_data.clone());
 
     // Chain filters together into a single filter
     Ok(
         filter_show
         .or(
-            //filter_lines
-            route_points
-            //.or(route_points)
-            .or(route_unified_batch)
+            filter_lines
+            .or(filter_points)
+            .or(filter_unified_batch)
             .or(
-                route_lines_batch
+                filter_lines_batch
                 .with(warp::compression::gzip())
             )
             .recover(super::custom_rejection_handler)
