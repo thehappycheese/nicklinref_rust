@@ -6,7 +6,7 @@ use super::RequestedCwy;
 use super::output_format::OutputFormatPoints;
 
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct QueryParametersPoint {
     /// road number (eg "H001")
@@ -31,6 +31,17 @@ pub struct QueryParametersPoint {
 
 }
 
+impl QueryParametersPoint {
+    pub fn with_format(&self, format:&OutputFormatPoints) -> Self{
+        QueryParametersPoint{
+            f:format.clone(), // TODO: SHould not clone inside function i think???
+            cwy:self.cwy,
+            offset:self.offset,
+            road:self.road.clone(),
+            slk:self.slk
+        }
+    }
+}
 
 
 

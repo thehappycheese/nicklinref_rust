@@ -1,7 +1,7 @@
 use crate::data::cached::Cwy;
 use serde::Deserialize;
 
-#[derive(Debug, PartialEq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Deserialize, Copy)]
 pub enum RequestedCwy {
     L,
     R,
