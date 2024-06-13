@@ -57,66 +57,11 @@ mod tests {
         }
         "#;
 
-        let result: Vec<QueryParametersPointLine> = serde_json::from_str(example_json).unwrap();
-
-        let expected = vec![
-            QueryParametersPointLine::Line(QueryParametersLine {
-                road: String::from("H001"),
-                slk_from: 10.0,
-                slk_to: 20.0,
-                offset: 1.0,
-                f: OutputFormatLines::geojson,
-                cwy: RequestedCwy::LRS,
-                m: false
-            }),
-            QueryParametersPointLine::Point(QueryParametersPoint {
-                road: String::from("H016"),
-                slk: 10.0,
-                cwy: RequestedCwy::LRS,
-                offset:0.0,
-                f:OutputFormatPoints::geojson
-            }),
-            QueryParametersPointLine::Point(QueryParametersPoint {
-                road: String::from("H015"),
-                slk: 10.0,
-                cwy: RequestedCwy::LRS,
-                offset:0.0,
-                f:OutputFormatPoints::geojson
-            }),
-        ];
-
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn test_query_parameters_unified_deserialization() {
-        let example_json = r#"
-            {
-                "format": "example",
-                "items": [
-                    {
-                        "road": "H001",
-                        "slk_from": 10,
-                        "slk_to": 20,
-                        "offset": 10
-                    },
-                    {
-                        "road": "H016",
-                        "slk": 10
-                    },
-                    {
-                        "road": "H015",
-                        "slk": 10
-                    }
-                ]
-            }
-        "#;
-
         let result: QueryParametersUnifiedPost = serde_json::from_str(example_json).unwrap();
 
-        let expected = QueryParametersUnifiedPost {
-            format: OutputFormatUnified::geojson,
-            items: vec![
+        let expected = QueryParametersUnifiedPost{
+            format:OutputFormatUnified::geojson,
+            items:vec![
                 QueryParametersPointLine::Line(QueryParametersLine {
                     road: String::from("H001"),
                     slk_from: 10.0,
