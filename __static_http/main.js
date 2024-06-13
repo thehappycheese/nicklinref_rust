@@ -113,10 +113,26 @@ add_features(new URLSearchParams(window.location.search)).then(success => succes
 //////////////////////////////////////////////////////////////////////
 // Get Geometry
 // Optionally, use a Fetch_Queue to avoid browser error from too many parallel requests
-// For which the fetch API itself provides no convienient work-around
+// For which the fetch API itself provides no convenient work-around
 ///////////////////////////////////////////////////////////////////////
 
 async function add_features(url_params, fetch_pool = undefined) {
+    
+
+    if(url_params.has("format") && url_params.has("items")){
+        url_params.set("format","wkt")
+        return fetch("/batch2/?"+url_params.toString())
+            .then(response=>response.json())
+            .then(items=>items
+                .filter(item=>item)
+                .map(item=>{
+                    let read_features = new ol.format.WKT().readFeatures(item,{ featureProjection, dataProjection });
+                    layer_geojson.getSource().addFeatures(read_features);
+                })
+            ).then(()=>true);
+    }
+
+
 	f = url_params.get("f") ?? "geojson";
 	if(!(f.toLowerCase()==="latlon" || f.toLowerCase()==="latlondir")){
 		url_params.set("f","wkt");// geojson is default

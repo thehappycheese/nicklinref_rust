@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.0] 2024-06-13
+
+- Add routes `/batch2`, `/line` and `/point` which all support both a `GET` and `POST` method
+
 ## [1.0.0] 2023-06-12
 
 - drop support for case insensitive queries

@@ -31,10 +31,12 @@ create and visualise geometry based on live data. Below is a screenshot of NickM
     - [3.3.3. `f=` Parameter](#333-f-parameter)
   - [3.4. Browser - `/show/` Page](#34-browser---show-page)
   - [3.5. Advanced - `/batch/` Route](#35-advanced---batch-route)
-  - [3.6. Additional Usage Notes](#36-additional-usage-notes)
-    - [3.6.1. SLK, True Distance and Chainage](#361-slk-true-distance-and-chainage)
-    - [3.6.2. Supported Network Types](#362-supported-network-types)
-    - [3.6.3. Coordinate Reference System (CRS)](#363-coordinate-reference-system-crs)
+  - [3.6. `/batch2` unified batch requests](#36-batch2-unified-batch-requests)
+  - [3.7. `/point` and `/line` routes](#37-point-and-line-routes)
+  - [3.8. Additional Usage Notes](#38-additional-usage-notes)
+    - [3.8.1. SLK, True Distance and Chainage](#381-slk-true-distance-and-chainage)
+    - [3.8.2. Supported Network Types](#382-supported-network-types)
+    - [3.8.3. Coordinate Reference System (CRS)](#383-coordinate-reference-system-crs)
 - [4. Running the Server Yourself](#4-running-the-server-yourself)
   - [4.1. Installation](#41-installation)
   - [4.2. Compilation](#42-compilation)
@@ -343,18 +345,85 @@ The output of the script above is shown below:
 
 </details>
 
-### 3.6. Additional Usage Notes
+### 3.6. `/batch2` unified batch requests
 
-#### 3.6.1. SLK, True Distance and Chainage
+A new batch request route has been added to allow requesting both line and point features.
+
+This route accepts either a `POST`or `GET` requests.
+
+This version of the batch route does not use the complex binary protocol described above.
+
+The format of the request is as follows;
+
+```json
+{
+    "format":"wkt",
+    "items":[
+        {
+            "road":"H001",
+            "slk_from":10,
+            "slk_to":20,
+            "offset":10
+        },
+        {
+            "road":"H016",
+            "slk":10
+        },
+        {
+            "road":"H015",
+            "slk":10
+        }   
+    ]
+}
+```
+
+When url encoded the above query should look like;
+
+```text
+format=wkt&items=%5B%7B%27road%27%3A+%27H001%27%2C+%27slk_from%27%3A+10%2C+%27slk_to%27%3A+20%2C+%27offset%27%3A+10%7D%2C+%7B%27road%27%3A+%27H016%27%2C+%27slk%27%3A+10%7D%2C+%7B%27road%27%3A+%27H015%27%2C+%27slk%27%3A+10%7D%5D
+```
+
+Formats supported are restricted to `wkt`, `geojson` or `json`
+
+The result type is always a JSON list which is the same length as the `"items"` specified in the request.
+
+Items that did not return a result may be either `null` or, due to a long outstanding issue, an invalid empty geometry like `MULTIPOINT ()` or a GeoJSON object with 0 coordinates.
+
+ If `format=wkt` is specified, then each item will be either `null` or a `"wkt string"`. The result should look like;
+
+```json
+200
+["MULTILINESTRING ((115.94759478043025 -32.02724359866268,...., 116.00968185354726 -32.0797516372457))","MULTIPOINT ((115.8018372737292 -31.890062043719624),(115.80208275968369 -31.88999214761082))","MULTIPOINT ((115.85393141776753 -32.048215776792965),(115.85365425352151 -32.04809166414051))"]
+```
+
+### 3.7. `/point` and `/line` routes
+
+The `/point` and `/line` routes support BOTH `GET` and `POST` requests.
+
+> Note: The first version of this server supported only `GET` requests against the
+> root path `/` using url query parameters. To add support `POST` requests, I
+> had to create two new routes `/line` and `/point`.
+> 
+> For backward compatibility `GET`, requests against root `/` will continue to
+> work.
+
+`POST` requests made against `/line` or `/route` must use the same parameters as
+documented above, but formatted as JSON in the body of the request. For example
+`GET localhost:8080/?road=H001&slk=10` becomes `POST localhost:8080/point` with
+JSON body `{"road":"H001", "slk":10}`
+
+### 3.8. Additional Usage Notes
+
+#### 3.8.1. SLK, True Distance and Chainage
 
 SLK stands for "Straight Line Kilometre" and is sometimes called 'chainage' or
 'kilometrage' in other contexts.
 
 At Main Roads Western Australia SLK refers to an "adjusted" linear measure which
-has discontinuities called 'Points of Equation' (POE) (there are between 100 and 200
-points of equation throughout the state road network) where there is an abrupt
-increase or decrease in SLK. This is done so that when asset locations are
-recorded by SLK, these records are not invalidated when a road realignment
+has discontinuities called 'Points of Equation' (POE) (there are between 100 and
+200 points of equation throughout the state road network) where there is an
+abrupt increase or decrease in SLK. This is done so that when asset locations
+are recorded by SLK, these records are not invalidated when a road realignment
 project modifies the length of a road.
 
 This software has no special compensation to handle POE discontinuities. Please
@@ -365,7 +434,7 @@ The non-adjusted linear measure is called "True Distance".
 This software is only capable of looking up Lat/Lon from SLK. True distance is
 not yet supported.
 
-#### 3.6.2. Supported Network Types
+#### 3.8.2. Supported Network Types
 
 This tool is capable of querying all road network types included in this dataset
 <https://portal-mainroads.opendata.arcgis.com/datasets/mainroads::road-network/about>
@@ -379,7 +448,7 @@ This tool is capable of querying all road network types included in this dataset
 | Miscellaneous Road         | ✔️       |
 | Crossover                  | ✔️       |
 
-#### 3.6.3. Coordinate Reference System (CRS)
+#### 3.8.3. Coordinate Reference System (CRS)
 
 The coordinate system of the returned geometry depends on the coordinate system
 downloaded from `NLR_DATA_SOURCE_URL`.

@@ -5,8 +5,6 @@ use crate::helpers::serde_helpers::{f32_finite_or_zero, f32_not_nan_or_fail};
 use super::RequestedCwy;
 use super::output_format::OutputFormatLines;
 
-
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct QueryParametersLine {
@@ -41,6 +39,15 @@ pub struct QueryParametersLine {
     /// possible
 	pub m:bool,
 
+}
+
+impl QueryParametersLine {
+    pub fn with_format(&self, format:&OutputFormatLines) -> Self{
+        QueryParametersLine{
+            f:format.clone(),
+            ..self.clone()
+        }
+    }
 }
 
 fn default_slk_from() -> f32 {

@@ -18,5 +18,6 @@
     "markdownlint.config": {
         "MD033": false,
         "MD028":false
-    }
+    },
+    "editor.inlayHints.enabled": "offUnlessPressed"
 }
