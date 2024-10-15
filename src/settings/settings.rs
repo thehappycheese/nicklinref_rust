@@ -56,7 +56,7 @@ pub struct Settings {
     #[clap(
         long="data-source-url",
         env="NLR_DATA_SOURCE_URL",
-        default_value = "https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
+        default_value = "https://gisservices.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json",
         value_hint=clap::ValueHint::Url
     )]
     /// Url of the esri rest service hosting the road network data
